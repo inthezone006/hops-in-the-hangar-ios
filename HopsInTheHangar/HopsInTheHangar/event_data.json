@@ -1,0 +1,66 @@
+{
+  "sponsors": [
+    {
+      "name": "City of Middletown & MWO",
+      "level": "Top Flight",
+      "description": "Top Flight Airshow Sponsor",
+      "links": [
+        { "label": "City of Middletown", "url": "https://www.cityofmiddletown.org" },
+        { "label": "MWO (Middletown Regional Airport)", "url": "https://flymwo.com" }
+      ]
+    },
+    {
+      "name": "Start Skydiving & Team Fastrax",
+      "level": "First Class",
+      "description": "First Class Sponsor",
+      "links": [
+        { "label": "Start Skydiving", "url": "https://startskydiving.com" },
+        { "label": "Team Fastrax", "url": "https://teamfastrax.com" }
+      ]
+    },
+    { "name": "Safe Skies Aviation, LLC", "level": "Business Class", "description": "Business Class Sponsor", "website": "https://safeskiesaviation.com" },
+    { "name": "Balloon Dog Events", "level": "Business Class", "description": "Business Class Sponsor", "website": "https://www.balloondogevents.com" },
+    { "name": "Thread Headz", "level": "Business Class", "description": "Business Class Sponsor", "website": "https://threadheadzz.com/home/comingsoon" },
+    { "name": "Lewis Horticultural Service", "level": "Business Class", "description": "Business Class Sponsor", "website": "http://lewishorticultural.com" },
+    { "name": "BB Tech Services", "level": "Business Class", "description": "Business Class Sponsor", "website": "https://bbtechservices.com" },
+    { "name": "Middletown Community Foundation", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://mcfoundation.org" },
+    { "name": "Askren Balloon Team", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://askrenballoonteam.com" },
+    { "name": "Hartzell Propeller", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://hartzellprop.com" },
+    { "name": "Valley Central Bank", "level": "Passport", "description": "Passport Sponsor", "website": "https://valleycentral.org" },
+    { "name": "Midwest Air Recovery", "level": "Passport", "description": "Passport Sponsor", "website": "http://midwestairrecovery.com" },
+    { "name": "Big Daddy Dumpsters", "level": "Passport", "description": "Passport Sponsor", "website": "https://bigdaddydumpsters.com" },
+    { "name": "Miami Valley Propane", "level": "Passport", "description": "Passport Sponsor", "website": "https://mvpropane.com" },
+    { "name": "Phillips Tube Group", "level": "Passport", "description": "Passport Sponsor", "website": "https://phillipstube.com" },
+    { "name": "Kara Goheen Friends & Furball", "level": "Passport", "description": "Passport Sponsor", "website": "https://furballmiddletown.com" },
+    { "name": "New Ales Brewing", "level": "Brewery", "description": "Sponsoring Brewery", "website": "https://www.newalesbrewing.com" }
+  ],
+  "vendors": [
+    { "name": "High Grain Brewing", "category": "Brewery", "description": "Cincinnati, OH", "email": "info@highgrainbrewing.com", "phone": "513-620-8300", "website": "https://highgrainbrewing.com", "mapId": "Beer Booth 1" },
+    { "name": "Dafuque Beer Company", "category": "Brewery", "description": "Local Favorite", "email": "info@dafuquebeer.com", "phone": "614-204-5147", "website": "https://dafuquebeer.com", "mapId": "Beer Booth 2" },
+    { "name": "Streetside Brewery", "category": "Brewery", "description": "Cincinnati, OH", "email": "info@streetsidebrewery.com", "phone": "513-615-5877", "website": "https://streetsidebrewery.com", "mapId": "Beer Booth 3" },
+    { "name": "Loose Ends Brewing", "category": "Brewery", "description": "Centerville, OH", "email": "info@looseendsbrewing.com", "phone": "937-723-6328", "website": "https://www.looseendsbrewing.com", "mapId": "Beer Booth 4" },
+    { "name": "Third Eye Brewing", "category": "Brewery", "description": "Sharonville, OH", "email": "info@thirdeyebrewingco.com", "phone": "513-771-2739", "website": "https://thirdeyebrewingco.com", "mapId": "Beer Booth 5" },
+    { "name": "Gravel Road Brewing Co", "category": "Brewery", "description": "Middletown, OH", "email": "contact@gravelroadbrewing.com", "phone": "513-594-8251", "website": "http://gravelroadbrewing.com", "mapId": "Beer Booth 6" },
+    { "name": "Depot Brewing Company", "category": "Brewery", "description": "Fairborn, OH", "email": "contact@depotbrewing.com", "phone": "513-796-3661", "website": "https://www.depotbrewing.com", "mapId": "Beer Booth 7" },
+    { "name": "Sonder Brewing", "category": "Brewery", "description": "Mason, OH", "email": "contactus@sonderbrewing.com", "phone": "513-779-2739", "website": "https://sonderbrewing.com", "mapId": "Beer Booth 8" },
+    { "name": "Stevens Point Brewery", "category": "Brewery", "description": "Stevens Point, WI", "email": "info@pointbeer.com", "phone": "715-344-9310", "website": "https://www.pointbeer.com", "mapId": "Beer Booth 9" },
+    { "name": "Heavier Than Air Brewing Co", "category": "Brewery", "description": "Centerville, OH", "email": "info@heavierthanairbrewing.com", "phone": "937-433-1500", "website": "https://heavierthanairbrewing.com", "mapId": "Beer Booth 10" },
+    { "name": "NEW Ales Brewing", "category": "Brewery", "description": "Middletown, OH", "email": "middletownbeerandsandwiches@gmail.com", "phone": "513-915-7023", "website": "https://www.newalesbrewing.com", "mapId": "Beer Booth 11" },
+    { "name": "BC's Brewing Company", "category": "Brewery", "description": "Mason, OH", "email": "info@bcsbrewing.com", "phone": "513-847-6866", "website": "https://www.bcsbrewing.com", "mapId": "Beer Booth 12" }
+  ],
+  "schedule": [
+    { "time": "4:00 PM", "event": "VIP Early Access" },
+    { "time": "4:00 PM - 6:00 PM", "event": "Entrance Gate Live Performance" },
+    { "time": "5:00 PM", "event": "General Admission Starts" },
+    { "time": "6:00 PM", "event": "Opening Jump" },
+    { "time": "9:30 PM", "event": "Event End" }
+  ],
+  "info": {
+    "parking": "Free parking is available at the Middletown Regional Airport. Follow signs for 'Event Parking'. Shuttles will be available from designated lots.",
+    "rules": "No outside food or beverage. Clear bags only. No smoking in the hangars. All attendees must be 21+ with a valid ID to consume alcohol.",
+    "hotels": [
+      { "name": "Drury Inn & Suites", "link": "https://www.druryhotels.com" },
+      { "name": "Hampton Inn", "link": "https://www.hilton.com/en/hotels/mwomdhx-hampton-middletown/" }
+    ]
+  }
+}
