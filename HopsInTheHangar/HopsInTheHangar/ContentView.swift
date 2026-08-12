@@ -9,7 +9,7 @@ struct FAQItem: Codable, Identifiable, Hashable {
     let id = UUID()
     let question: String
     let answer: String
-    
+
     enum CodingKeys: String, CodingKey {
         case question, answer
     }
@@ -122,6 +122,76 @@ struct ScreenHeaderView: View {
     }
 }
 
+// MARK: - Multi-Selection Filter Sheet
+struct FilterSelectionSheet: View {
+    let title: String
+    let options: [String]
+    @Binding var selectedOptions: Set<String>
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                List {
+                    Section {
+                        ForEach(options, id: \.self) { option in
+                            Button {
+                                toggle(option)
+                            } label: {
+                                HStack {
+                                    Text(option)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.white)
+                                    Spacer()
+                                    Image(systemName: selectedOptions.contains(option) ? "checkmark.circle.fill" : "circle")
+                                        .font(.title3)
+                                        .foregroundStyle(selectedOptions.contains(option) ? Color.aestheticGold : Color.secondarySlate)
+                                }
+                                .padding(.vertical, 4)
+                            }
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color.primaryNavy)
+                        }
+                    } header: {
+                        Text("Select categories to display")
+                            .foregroundStyle(Color.secondarySlate)
+                    }
+                }
+                .scrollContentBackground(.hidden)
+                .background(Color.deepNavy)
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.aestheticGold)
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Select All") {
+                        selectedOptions = Set(options)
+                    }
+                    .foregroundStyle(Color.secondarySlate)
+                }
+            }
+        }
+        .modifier(NavyTheme())
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
+
+    private func toggle(_ option: String) {
+        if selectedOptions.contains(option) {
+            selectedOptions.remove(option)
+        } else {
+            selectedOptions.insert(option)
+        }
+    }
+}
+
 // MARK: - App Shell
 struct ContentView: View {
     init() {
@@ -165,6 +235,7 @@ struct HomeView: View {
         VStack(spacing: 0) {
             ScreenHeaderView(title: "Home", showAppIcon: true)
                 .padding(.horizontal, 16)
+                .padding(.bottom, 16)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -302,34 +373,79 @@ struct SponsorsView: View {
     let eventData: EventData?
     @Environment(\.openURL) private var openURL
     @State private var query = ""
+    @State private var selectedTiers: Set<String> = [
+        "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Breweries"
+    ]
     @State private var sheetSponsor: SponsorItem? = nil
+    @State private var isFilterPresented: Bool = false
+
+    private let allTiers = [
+        "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Breweries"
+    ]
 
     var sponsors: [SponsorItem] { eventData?.sponsors ?? [] }
+    
     var filtered: [SponsorItem] {
-        guard !query.isEmpty else { return sponsors }
-        return sponsors.filter { $0.name.localizedCaseInsensitiveContains(query) || $0.level.localizedCaseInsensitiveContains(query) }
+        sponsors.filter { sponsor in
+            let matchesQuery = query.isEmpty ||
+                sponsor.name.localizedCaseInsensitiveContains(query) ||
+                sponsor.level.localizedCaseInsensitiveContains(query)
+            
+            let matchesTier = selectedTiers.contains { tier in
+                sponsor.level.localizedCaseInsensitiveContains(tier)
+            }
+            
+            return matchesQuery && matchesTier
+        }
     }
 
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeaderView(title: "Sponsors", showAppIcon: false)
                 .padding(.horizontal, 16)
+                .padding(.bottom, 16)
 
-            // Custom Search Field
-            HStack {
-                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("Search Sponsors", text: $query).foregroundStyle(.white)
-                if !query.isEmpty {
-                    Button { query = "" } label: {
-                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+            // Search Bar + Filter Trigger Button
+            HStack(spacing: 8) {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search Sponsors", text: $query)
+                        .foregroundStyle(.white)
+                    if !query.isEmpty {
+                        Button {
+                            query = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
-            }
-            .padding(10)
-            .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
-            .padding(.horizontal, 16)
-            .padding(.bottom, 8)
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
 
+                Button {
+                    isFilterPresented = true
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(Color.aestheticGold)
+                        
+                        if selectedTiers.count < allTiers.count {
+                            Circle()
+                                .fill(Color.pink)
+                                .frame(width: 8, height: 8)
+                                .offset(x: 2, y: -2)
+                        }
+                    }
+                    .padding(.trailing, 4)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+
+            // Sponsor List
             List {
                 if !sponsors.isEmpty {
                     Section {
@@ -343,20 +459,24 @@ struct SponsorsView: View {
                                     if let u = urlString, let url = URL(string: u) { openURL(url) }
                                 }
                             } label: {
-                                HStack(alignment: .top, spacing: 12) {
+                                HStack(alignment: .center, spacing: 12) {
                                     ZStack {
                                         Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 40, height: 40)
-                                        if let _ = UIImage(named: assetName(from: sponsor.name)) {
+                                        if UIImage(named: assetName(from: sponsor.name)) != nil {
                                             Image(assetName(from: sponsor.name))
-                                                .resizable().scaledToFill().frame(width: 36, height: 36).clipShape(Circle())
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 36, height: 36)
+                                                .clipShape(Circle())
                                         } else {
-                                            Image(systemName: "star.fill").foregroundStyle(Color.aestheticGold)
+                                            Image(systemName: "star.fill")
+                                                .foregroundStyle(Color.aestheticGold)
                                         }
                                     }
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(sponsor.name).fontWeight(.semibold)
                                         Text(sponsor.description).foregroundStyle(.secondary).font(.subheadline).lineLimit(2)
-                                        Text(sponsor.level.uppercased()).font(.caption2).foregroundStyle(Color.aestheticGold)
+                                        Text(sponsor.level).font(.caption2).foregroundStyle(.secondary)
                                     }
                                     Spacer()
                                 }
@@ -376,6 +496,13 @@ struct SponsorsView: View {
         }
         .background(Color.deepNavy)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $isFilterPresented) {
+            FilterSelectionSheet(
+                title: "Filter Sponsors",
+                options: allTiers,
+                selectedOptions: $selectedTiers
+            )
+        }
         .sheet(item: $sheetSponsor) { sponsor in
             NavigationStack {
                 List {
@@ -421,10 +548,11 @@ struct SponsorsView: View {
             .presentationDetents([.medium, .large])
         }
     }
+
     private func assetName(from name: String) -> String {
         let lower = name.lowercased()
-        let allowed = lower.replacingOccurrences(of: "[^a-z0-9_]", with: "", options: .regularExpression)
-        return allowed.replacingOccurrences(of: " ", with: "_")
+        let underscored = lower.replacingOccurrences(of: " ", with: "_")
+        return underscored.replacingOccurrences(of: "[^a-z0-9_]", with: "", options: .regularExpression)
     }
 }
 
@@ -436,6 +564,9 @@ struct VendorsView: View {
 
     @State private var query = ""
     @State private var selected: Set<String> = ["Brewery", "Food Truck"]
+    @State private var isFilterPresented: Bool = false
+
+    private let categories = ["Brewery", "Food Truck"]
 
     var vendors: [VendorItem] { eventData?.vendors ?? [] }
     var filtered: [VendorItem] {
@@ -449,8 +580,9 @@ struct VendorsView: View {
         VStack(spacing: 0) {
             ScreenHeaderView(title: "Vendors", showAppIcon: false)
                 .padding(.horizontal, 16)
+                .padding(.bottom, 16)
 
-            // Search Bar + Filter Icon Row
+            // Search Bar + Filter Trigger Button
             HStack(spacing: 8) {
                 HStack {
                     Image(systemName: "magnifyingglass")
@@ -469,27 +601,32 @@ struct VendorsView: View {
                 .padding(10)
                 .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
 
-                Menu {
-                    ForEach(["Brewery", "Food Truck"], id: \.self) { c in
-                        Button(action: { toggle(category: c) }) {
-                            Label(c, systemImage: selected.contains(c) ? "checkmark" : "")
+                Button {
+                    isFilterPresented = true
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(Color.aestheticGold)
+                        
+                        if selected.count < categories.count {
+                            Circle()
+                                .fill(Color.pink)
+                                .frame(width: 8, height: 8)
+                                .offset(x: 2, y: -2)
                         }
                     }
-                } label: {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
-                        .font(.title2)
-                        .foregroundStyle(Color.aestheticGold)
-                        .padding(.trailing, 4)
+                    .padding(.trailing, 4)
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 8)
+            .padding(.bottom, 16)
 
             // Vendor List
             List {
                 Section {
                     ForEach(filtered) { vendor in
-                        HStack(alignment: .top, spacing: 12) {
+                        HStack(alignment: .center, spacing: 12) {
                             ZStack {
                                 Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 40, height: 40)
                                 if UIImage(named: assetName(from: vendor.name)) != nil {
@@ -502,7 +639,7 @@ struct VendorsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(vendor.name).fontWeight(.semibold)
                                 Text(vendor.description).foregroundStyle(.secondary).font(.subheadline).lineLimit(2)
-                                Text(vendor.category.uppercased()).font(.caption2).foregroundStyle(.secondary)
+                                Text(vendor.category).font(.caption2).foregroundStyle(.secondary)
                             }
                             Spacer()
                             Button {
@@ -526,11 +663,15 @@ struct VendorsView: View {
         }
         .background(Color.deepNavy)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $isFilterPresented) {
+            FilterSelectionSheet(
+                title: "Filter Vendors",
+                options: categories,
+                selectedOptions: $selected
+            )
+        }
     }
 
-    private func toggle(category: String) {
-        if selected.contains(category) { selected.remove(category) } else { selected.insert(category) }
-    }
     private func iconName(for category: String) -> String {
         if category.localizedCaseInsensitiveContains("Food") { return "fork.knife" }
         if category.localizedCaseInsensitiveContains("Brewery") { return "wineglass" }
@@ -553,60 +694,135 @@ struct EntertainmentView: View {
         VStack(spacing: 0) {
             ScreenHeaderView(title: "Events", showAppIcon: false)
                 .padding(.horizontal, 16)
+                .padding(.bottom, 0)
 
             List {
-                Section("Ground Entertainment") {
-                    Label("Jane Doe — Entertainment Host", systemImage: "mic.fill")
-                        .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                    Label("DJ Mixmaster — Live Music DJ", systemImage: "music.note")
-                        .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                    Label("John Smith — National Anthem", systemImage: "person.wave.2.fill")
-                        .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                // MARK: Ground Entertainment
+                Section {
+                    EntertainmentRow(
+                        title: "Jane Doe — Entertainment Host",
+                        subtitle: "Ground Host",
+                        icon: "mic.fill"
+                    )
+                    EntertainmentRow(
+                        title: "DJ Mixmaster — Live Music DJ",
+                        subtitle: "Live Performance",
+                        icon: "music.note"
+                    )
+                    EntertainmentRow(
+                        title: "John Smith — National Anthem",
+                        subtitle: "Special Vocalist",
+                        icon: "person.wave.2.fill"
+                    )
+                } header: {
+                    SectionTitleHeader(title: "Ground Entertainment")
                 }
-                Section("In Flight Performers") {
-                    Label("Wild Bill — Steven Hanshew", systemImage: "mic.fill")
-                        .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                    Label("Team Fastrax — Opening Jump", systemImage: "airplane")
-                        .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+
+                // MARK: In Flight Performers
+                Section {
+                    EntertainmentRow(
+                        title: "Wild Bill — Steven Hanshew",
+                        subtitle: "Aerobatic Performer",
+                        icon: "mic.fill"
+                    )
+                    EntertainmentRow(
+                        title: "Team Fastrax — Opening Jump",
+                        subtitle: "Skydiving Exhibition",
+                        icon: "airplane"
+                    )
+                } header: {
+                    SectionTitleHeader(title: "In Flight Performers")
                 }
-                Section("Event Schedule") {
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+
+                // MARK: Event Schedule Timeline
+                Section {
                     ForEach(schedule, id: \.id) { item in
-                        HStack {
-                            Image(systemName: "calendar")
-                            VStack(alignment: .leading) {
+                        HStack(alignment: .center, spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .stroke(Color.secondary.opacity(0.4), lineWidth: 2)
+                                    .frame(width: 40, height: 40)
+                                Image(systemName: "calendar")
+                                    .foregroundStyle(Color.aestheticGold)
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text(item.event)
-                                Text(item.time).foregroundStyle(Color.aestheticGold).font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.white)
+                                Text(item.time)
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.aestheticGold)
                             }
                             Spacer()
                         }
-                        .padding(16)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                        .padding(8)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
                     }
+                } header: {
+                    SectionTitleHeader(title: "Event Schedule")
                 }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
             }
+            .listRowSpacing(0)
             .scrollContentBackground(.hidden)
             .listStyle(.plain)
-            .listRowSpacing(0)
         }
         .background(Color.deepNavy)
         .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+// MARK: - Supporting Subviews for Events Layout
+private struct SectionTitleHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.headline)
+            .fontWeight(.bold)
+            .foregroundStyle(Color.aestheticGold)
+            .padding(.top, 8)
+            .padding(.bottom, 2)
+            .textCase(nil)
+    }
+}
+
+private struct EntertainmentRow: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            ZStack {
+                Circle()
+                    .stroke(Color.secondary.opacity(0.4), lineWidth: 2)
+                    .frame(width: 40, height: 40)
+                Image(systemName: icon)
+                    .foregroundStyle(Color.aestheticGold)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
     }
 }
 
@@ -643,7 +859,7 @@ struct OSMRouteView: UIViewRepresentable {
                     [39.52392228883309, -84.39758570695065],
                     [39.523858475447454, -84.39595871354263],
                     [39.527066399999974, -84.39509747693043],
-                    [39.527587748793955, -84.39398167808926],
+                    [39.527587748793955, -84.3938167808926],
                     [39.52815437416716, -84.39416932546087],
                     [39.528705851297936, -84.39335856931429],
                     [39.52926176496046, -84.39276198740617]
@@ -673,39 +889,59 @@ struct MapContainerView: View {
     @State private var selectedTab: Int = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScreenHeaderView(title: "Map", showAppIcon: false)
-                .padding(.horizontal, 16)
+        ZStack(alignment: .top) {
+            // Background Base
+            Color.deepNavy
+                .ignoresSafeArea()
 
-            Picker("Map Option", selection: $selectedTab) {
-                Text("Event Map").tag(0)
-                Text("Getting to Event").tag(1)
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-
+            // Content Area
             if selectedTab == 0 {
-                // Cleared Event Map Placeholder View
-                ZStack {
-                    Color.deepNavy
-                    VStack(spacing: 12) {
-                        Image(systemName: "map.fill")
-                            .font(.system(size: 48))
-                            .foregroundStyle(Color.aestheticGold)
-                        Text("Event Map Coming Soon")
-                            .font(.headline)
-                            .foregroundStyle(.white)
+                VStack(spacing: 0) {
+                    ScreenHeaderView(title: "Map", showAppIcon: false)
+                        .padding(.horizontal, 16)
+
+                    Picker("Map Option", selection: $selectedTab) {
+                        Text("Event Map").tag(0)
+                        Text("Getting to Event").tag(1)
                     }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                OSMRouteView()
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+
+                    ZStack {
+                        Color.deepNavy
+                        VStack(spacing: 12) {
+                            Image(systemName: "map.fill")
+                                .font(.system(size: 48))
+                                .foregroundStyle(Color.aestheticGold)
+                            Text("Event Map Coming Soon")
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                        }
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            } else {
+                // Leaflet Map layer extending edge-to-edge
+                OSMRouteView()
+                    .ignoresSafeArea(edges: .bottom)
+
+                // Floating Header Controls pinned to top
+                VStack(spacing: 0) {
+                    ScreenHeaderView(title: "Map", showAppIcon: false)
+                        .padding(.horizontal, 16)
+
+                    Picker("Map Option", selection: $selectedTab) {
+                        Text("Event Map").tag(0)
+                        Text("Getting to Event").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                }
+                .background(Color.deepNavy)
             }
         }
-        .background(Color.deepNavy)
-        .ignoresSafeArea(edges: .bottom)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "map"]) }
     }
