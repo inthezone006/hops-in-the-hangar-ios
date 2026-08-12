@@ -34,9 +34,22 @@
 		69EC5AF83019B10800A80C95 /* HopsInTheHangarUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HopsInTheHangarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		696E57AE302C5AF600D68896 /* Exceptions for "HopsInTheHangar" folder in "HopsInTheHangar" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 69EC5AE03019B10700A80C95 /* HopsInTheHangar */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		69EC5AE33019B10700A80C95 /* HopsInTheHangar */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				696E57AE302C5AF600D68896 /* Exceptions for "HopsInTheHangar" folder in "HopsInTheHangar" target */,
+			);
 			path = HopsInTheHangar;
 			sourceTree = "<group>";
 		};
@@ -412,6 +425,7 @@
 				DEVELOPMENT_TEAM = N34H62Z85S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HopsInTheHangar/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Hops in the Hangar";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -446,6 +460,7 @@
 				DEVELOPMENT_TEAM = N34H62Z85S;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HopsInTheHangar/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Hops in the Hangar";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

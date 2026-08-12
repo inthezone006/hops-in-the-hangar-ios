@@ -694,11 +694,13 @@ struct EntertainmentView: View {
         VStack(spacing: 0) {
             ScreenHeaderView(title: "Events", showAppIcon: false)
                 .padding(.horizontal, 16)
-                .padding(.bottom, 0)
+                .padding(.bottom, 16)
 
-            List {
-                // MARK: Ground Entertainment
-                Section {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 6) {
+                    // MARK: Ground Entertainment
+                    SectionTitleHeader(title: "Ground Entertainment", isFirst: true)
+                    
                     EntertainmentRow(
                         title: "Jane Doe — Entertainment Host",
                         subtitle: "Ground Host",
@@ -714,15 +716,10 @@ struct EntertainmentView: View {
                         subtitle: "Special Vocalist",
                         icon: "person.wave.2.fill"
                     )
-                } header: {
-                    SectionTitleHeader(title: "Ground Entertainment")
-                }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
 
-                // MARK: In Flight Performers
-                Section {
+                    // MARK: In Flight Performers
+                    SectionTitleHeader(title: "In Flight Performers")
+                    
                     EntertainmentRow(
                         title: "Wild Bill — Steven Hanshew",
                         subtitle: "Aerobatic Performer",
@@ -733,15 +730,10 @@ struct EntertainmentView: View {
                         subtitle: "Skydiving Exhibition",
                         icon: "airplane"
                     )
-                } header: {
-                    SectionTitleHeader(title: "In Flight Performers")
-                }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
 
-                // MARK: Event Schedule Timeline
-                Section {
+                    // MARK: Event Schedule Timeline
+                    SectionTitleHeader(title: "Event Schedule")
+                    
                     ForEach(schedule, id: \.id) { item in
                         HStack(alignment: .center, spacing: 12) {
                             ZStack {
@@ -758,23 +750,17 @@ struct EntertainmentView: View {
                                     .foregroundStyle(.white)
                                 Text(item.time)
                                     .font(.subheadline)
-                                    .foregroundStyle(Color.aestheticGold)
+                                    .foregroundStyle(Color.gray)
                             }
                             Spacer()
                         }
                         .padding(8)
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
                     }
-                } header: {
-                    SectionTitleHeader(title: "Event Schedule")
                 }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
             }
-            .listRowSpacing(0)
-            .scrollContentBackground(.hidden)
-            .listStyle(.plain)
         }
         .background(Color.deepNavy)
         .toolbar(.hidden, for: .navigationBar)
@@ -784,15 +770,15 @@ struct EntertainmentView: View {
 // MARK: - Supporting Subviews for Events Layout
 private struct SectionTitleHeader: View {
     let title: String
+    var isFirst: Bool = false
 
     var body: some View {
         Text(title)
             .font(.headline)
             .fontWeight(.bold)
             .foregroundStyle(Color.aestheticGold)
-            .padding(.top, 8)
+            .padding(.top, isFirst ? 0 : 12)
             .padding(.bottom, 2)
-            .textCase(nil)
     }
 }
 
