@@ -5,13 +5,30 @@ import FirebaseAnalytics
 import UIKit
 
 // MARK: - Models
+struct FAQItem: Codable, Identifiable, Hashable {
+    let id = UUID()
+    let question: String
+    let answer: String
+    
+    enum CodingKeys: String, CodingKey {
+        case question, answer
+    }
+}
+
 struct SponsorLink: Codable, Hashable { let label: String; let url: String }
 struct SponsorItem: Codable, Identifiable, Hashable { let id = UUID(); let name: String; let level: String; let description: String; let website: String?; let links: [SponsorLink]? }
 struct VendorItem: Codable, Identifiable, Hashable { let id = UUID(); let name: String; let category: String; let description: String; let email: String?; let phone: String?; let website: String?; let mapId: String? }
 struct ScheduleItem: Codable, Identifiable, Hashable { let id = UUID(); let time: String; let event: String }
 struct HotelItem: Codable, Identifiable, Hashable { let id = UUID(); let name: String; let link: String }
 struct GeneralInfo: Codable, Hashable { let parking: String; let rules: String; let hotels: [HotelItem] }
-struct EventData: Codable, Hashable { let sponsors: [SponsorItem]; let vendors: [VendorItem]; let schedule: [ScheduleItem]; let info: GeneralInfo }
+
+struct EventData: Codable, Hashable {
+    let sponsors: [SponsorItem]
+    let vendors: [VendorItem]
+    let schedule: [ScheduleItem]
+    let info: GeneralInfo
+    let faq: [FAQItem]?
+}
 
 // MARK: - Data Loader
 enum DataLoader {
@@ -68,30 +85,50 @@ struct NavyTheme: ViewModifier {
     }
 }
 
+// MARK: - Reusable Custom Header Component
+struct ScreenHeaderView: View {
+    let title: String
+    var showAppIcon: Bool = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            if showAppIcon {
+                if let appIcon = UIImage(named: "AppIcon") ?? UIImage(named: "AppIcon60x60") {
+                    Image(uiImage: appIcon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 36, height: 36)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.aestheticGold, lineWidth: 2))
+                } else {
+                    Image(systemName: "airplane.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 36, height: 36)
+                        .foregroundStyle(Color.aestheticGold)
+                }
+            }
+
+            Text(title)
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundStyle(.white)
+
+            Spacer()
+        }
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .background(Color.deepNavy)
+    }
+}
+
 // MARK: - App Shell
 struct ContentView: View {
     init() {
-        let navAppearance = UINavigationBarAppearance()
-        navAppearance.configureWithOpaqueBackground()
-        navAppearance.backgroundColor = UIColor(Color.primaryNavy)
-        navAppearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        navAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-        UINavigationBar.appearance().standardAppearance = navAppearance
-        UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
-        UINavigationBar.appearance().compactAppearance = navAppearance
-        UINavigationBar.appearance().tintColor = UIColor(Color.aestheticGold)
-
-        let tabAppearance = UITabBarAppearance()
-        tabAppearance.configureWithOpaqueBackground()
-        tabAppearance.backgroundColor = UIColor(Color.primaryNavy)
-        tabAppearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color.aestheticGold)
-        tabAppearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.white]
-        tabAppearance.stackedLayoutAppearance.normal.iconColor = UIColor(Color.secondarySlate)
-        tabAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(Color.secondarySlate)]
-        UITabBar.appearance().standardAppearance = tabAppearance
-        UITabBar.appearance().scrollEdgeAppearance = tabAppearance
-        UITabBar.appearance().tintColor = UIColor(Color.aestheticGold)
-        UITabBar.appearance().unselectedItemTintColor = UIColor(Color.secondarySlate)
+        UINavigationBar.appearance().standardAppearance = UINavigationBarAppearance()
+        UINavigationBar.appearance().scrollEdgeAppearance = UINavigationBarAppearance()
+        UITabBar.appearance().standardAppearance = UITabBarAppearance()
+        UITabBar.appearance().scrollEdgeAppearance = UITabBarAppearance()
     }
 
     @State private var eventData: EventData? = DataLoader.loadEventData()
@@ -118,89 +155,145 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Home
+// MARK: - Home View
 struct HomeView: View {
     let eventData: EventData?
     @Environment(\.openURL) private var openURL
+    @State private var isDescriptionExpanded: Bool = false
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                // App icon circle
-                ZStack {
-                    Circle().fill(Color.white).frame(width: 140, height: 140)
-                    Image(systemName: "airplane.circle.fill")
-                        .resizable().scaledToFit().frame(width: 120, height: 120)
-                        .foregroundStyle(.primary)
-                }
-                .padding(.top, 8)
+        VStack(spacing: 0) {
+            ScreenHeaderView(title: "Home", showAppIcon: true)
+                .padding(.horizontal, 16)
 
-                // Welcome card
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Welcome to the Show")
-                        .foregroundStyle(Color.aestheticGold)
-                    Text("Welcome to Hops in the Hangar, your Craft Beer & Airshow event app! Explore vendors, sponsors, venue info, hotels, entertainment, and performers.")
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Welcome Card with Expandable Text
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Welcome to the Show")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundStyle(Color.aestheticGold)
+                        
+                        Text("Welcome to Hops in the Hangar, your Craft Beer & Airshow event app! Explore a lineup of vendors and sponsors, discover detailed venue information, find the best hotels nearby, enjoy exciting entertainment, and get to know the featured airshow performers.")
+                            .foregroundStyle(.secondary)
+                        
+                        if isDescriptionExpanded {
+                            Text("Craft beer, beverages, and aircraft come together to create not only a fun social event, but also an extremely unique community experience. Hops in the Hangar celebrates aviation, local businesses, and great craft beverages while bringing people together for an unforgettable evening at the Middletown Regional Airport.")
+                                .foregroundStyle(.secondary)
+                            
+                            Text("Whether you're here for the thrilling air show performances, the incredible selection of breweries and beverage vendors, or simply to enjoy time with friends and family, this app will help you make the most of your experience. Stay connected with schedules, updates, event maps, and everything you need for an amazing experience at Hops in the Hangar 2026.")
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        Button {
+                            withAnimation {
+                                isDescriptionExpanded.toggle()
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(isDescriptionExpanded ? "Show Less" : "Read More")
+                                    .fontWeight(.semibold)
+                                Image(systemName: isDescriptionExpanded ? "chevron.up" : "chevron.down")
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(Color.aestheticGold)
+                        }
+                        .padding(.top, 4)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
 
-                // Venue & Logistics
-                if let info = eventData?.info {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Group {
-                            Text("Parking").font(.headline).foregroundStyle(Color.aestheticGold)
-                            Text(info.parking).foregroundStyle(.secondary)
-                        }
-                        Group {
-                            Text("Event Rules").font(.headline).foregroundStyle(Color.aestheticGold)
-                            Text(info.rules).foregroundStyle(.secondary)
-                        }
-                        Group {
-                            Text("Nearby Hotels").font(.headline).foregroundStyle(Color.aestheticGold)
-                            ForEach(info.hotels) { hotel in
-                                Button {
-                                    if let url = URL(string: hotel.link) { openURL(url) }
+                    // FAQ Section
+                    if let faqs = eventData?.faq, !faqs.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Frequently Asked Questions")
+                                .font(.headline)
+                                .foregroundStyle(Color.aestheticGold)
+                            
+                            ForEach(faqs) { item in
+                                DisclosureGroup {
+                                    Text(item.answer)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                        .padding(.vertical, 6)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 } label: {
-                                    HStack {
-                                        Image(systemName: "bed.double.fill")
-                                        Text(hotel.name).fontWeight(.semibold)
-                                        Spacer()
-                                        Image(systemName: "chevron.forward").font(.footnote)
-                                    }
-                                    .padding()
-                                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.06)))
+                                    Text(item.question)
+                                        .font(.body)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.white)
+                                        .multilineTextAlignment(.leading)
                                 }
-                                .buttonStyle(.plain)
+                                .tint(Color.aestheticGold)
+                                .padding()
+                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.06)))
                             }
                         }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
                     }
-                    .padding()
-                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
-                }
 
-                // Persistent Tickets button
-                Button {
-                    if let url = URL(string: "https://middletownaviationfoundation.ticketspice.com/hops-in-the-hangar-2026") {
-                        openURL(url)
-                        Analytics.logEvent("get_tickets_tap", parameters: nil)
+                    // Venue & Logistics
+                    if let info = eventData?.info {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Group {
+                                Text("Parking").font(.headline).foregroundStyle(Color.aestheticGold)
+                                Text(info.parking).foregroundStyle(.secondary)
+                            }
+                            Group {
+                                Text("Event Rules").font(.headline).foregroundStyle(Color.aestheticGold)
+                                Text(info.rules).foregroundStyle(.secondary)
+                            }
+                            Group {
+                                Text("Nearby Hotels").font(.headline).foregroundStyle(Color.aestheticGold)
+                                ForEach(info.hotels) { hotel in
+                                    Button {
+                                        if let url = URL(string: hotel.link) { openURL(url) }
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: "bed.double.fill")
+                                            Text(hotel.name).fontWeight(.semibold)
+                                            Spacer()
+                                            Image(systemName: "chevron.forward").font(.footnote)
+                                        }
+                                        .padding()
+                                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.06)))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
                     }
-                } label: {
-                    HStack {
-                        Image(systemName: "ticket.fill")
-                        Text("Get Tickets").fontWeight(.bold)
+
+                    // Persistent Tickets Button
+                    Button {
+                        if let url = URL(string: "https://middletownaviationfoundation.ticketspice.com/hops-in-the-hangar-2026") {
+                            openURL(url)
+                            Analytics.logEvent("get_tickets_tap", parameters: nil)
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "ticket.fill")
+                            Text("Get Tickets").fontWeight(.bold)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.aestheticGold))
+                        .foregroundStyle(Color.deepNavy)
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.aestheticGold))
-                    .foregroundStyle(Color.deepNavy)
                 }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
             }
-            .padding(16)
         }
         .background(Color.deepNavy)
-        .navigationTitle("Hops in the Hangar")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
@@ -218,66 +311,114 @@ struct SponsorsView: View {
     }
 
     var body: some View {
-        List {
-            if !sponsors.isEmpty {
-                Section {
-                    ForEach(filtered) { sponsor in
-                        Button {
-                            Analytics.logEvent("sponsor_open", parameters: ["name": sponsor.name])
-                            if let links = sponsor.links, links.count > 1 {
-                                sheetSponsor = sponsor
-                            } else {
-                                let urlString = sponsor.links?.first?.url ?? sponsor.website
-                                if let u = urlString, let url = URL(string: u) { openURL(url) }
-                            }
-                        } label: {
-                            HStack(alignment: .top, spacing: 12) {
-                                ZStack {
-                                    Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 48, height: 48)
-                                    if let image = Image(uiImage: UIImage(named: assetName(from: sponsor.name)) ?? UIImage()) as Image?, UIImage(named: assetName(from: sponsor.name)) != nil {
-                                        Image(assetName(from: sponsor.name))
-                                            .resizable().scaledToFill().frame(width: 44, height: 44).clipShape(Circle())
-                                    } else {
-                                        Image(systemName: "star.fill").foregroundStyle(Color.aestheticGold)
-                                    }
-                                }
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(sponsor.name)
-                                    Text(sponsor.description).foregroundStyle(.secondary).lineLimit(2)
-                                    Text(sponsor.level.uppercased()).font(.caption).foregroundStyle(Color.aestheticGold)
-                                }
-                                Spacer()
-                            }
-                            .padding(12)
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                        }
-                        .buttonStyle(.plain)
+        VStack(spacing: 0) {
+            ScreenHeaderView(title: "Sponsors", showAppIcon: false)
+                .padding(.horizontal, 16)
+
+            // Custom Search Field
+            HStack {
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                TextField("Search Sponsors", text: $query).foregroundStyle(.white)
+                if !query.isEmpty {
+                    Button { query = "" } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
                     }
                 }
-                .listRowBackground(Color.clear)
             }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+
+            List {
+                if !sponsors.isEmpty {
+                    Section {
+                        ForEach(filtered) { sponsor in
+                            Button {
+                                Analytics.logEvent("sponsor_open", parameters: ["name": sponsor.name])
+                                if let links = sponsor.links, links.count > 1 {
+                                    sheetSponsor = sponsor
+                                } else {
+                                    let urlString = sponsor.links?.first?.url ?? sponsor.website
+                                    if let u = urlString, let url = URL(string: u) { openURL(url) }
+                                }
+                            } label: {
+                                HStack(alignment: .top, spacing: 12) {
+                                    ZStack {
+                                        Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 40, height: 40)
+                                        if let _ = UIImage(named: assetName(from: sponsor.name)) {
+                                            Image(assetName(from: sponsor.name))
+                                                .resizable().scaledToFill().frame(width: 36, height: 36).clipShape(Circle())
+                                        } else {
+                                            Image(systemName: "star.fill").foregroundStyle(Color.aestheticGold)
+                                        }
+                                    }
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(sponsor.name).fontWeight(.semibold)
+                                        Text(sponsor.description).foregroundStyle(.secondary).font(.subheadline).lineLimit(2)
+                                        Text(sponsor.level.uppercased()).font(.caption2).foregroundStyle(Color.aestheticGold)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(8)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .listStyle(.plain)
         }
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Search Sponsors")
-        .navigationTitle("Sponsors")
-        .navigationBarTitleDisplayMode(.inline)
-        .scrollContentBackground(.hidden)
         .background(Color.deepNavy)
-        .listStyle(.plain)
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $sheetSponsor) { sponsor in
             NavigationStack {
                 List {
-                    Section("Open Website") {
+                    Section {
                         ForEach(sponsor.links ?? [], id: \.self) { link in
-                            Button(link.label) {
+                            Button {
                                 Analytics.logEvent("sponsor_open", parameters: ["name": sponsor.name])
                                 if let url = URL(string: link.url) { openURL(url) }
+                            } label: {
+                                HStack {
+                                    Text(link.label)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.white)
+                                    Spacer()
+                                    Image(systemName: "arrow.up.right.square")
+                                        .foregroundStyle(Color.aestheticGold)
+                                }
+                                .padding(12)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
                             }
+                            .buttonStyle(.plain)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                         }
+                    } header: {
+                        Text("Open Website")
+                            .foregroundStyle(Color.aestheticGold)
                     }
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color.deepNavy)
+                .listStyle(.plain)
                 .navigationTitle(sponsor.name)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { sheetSponsor = nil } } }
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") { sheetSponsor = nil }
+                            .foregroundStyle(Color.aestheticGold)
+                    }
+                }
             }
+            .modifier(NavyTheme())
+            .presentationDetents([.medium, .large])
         }
     }
     private func assetName(from name: String) -> String {
@@ -305,54 +446,86 @@ struct VendorsView: View {
     }
 
     var body: some View {
-        List {
-            Section {
-                ForEach(filtered) { vendor in
-                    HStack(alignment: .top, spacing: 12) {
-                        ZStack {
-                            Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 48, height: 48)
-                            if UIImage(named: assetName(from: vendor.name)) != nil {
-                                Image(assetName(from: vendor.name))
-                                    .resizable().scaledToFill().frame(width: 44, height: 44).clipShape(Circle())
-                            } else {
-                                Image(systemName: iconName(for: vendor.category)).foregroundStyle(.secondary)
-                            }
-                        }
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(vendor.name)
-                            Text(vendor.description).foregroundStyle(.secondary).lineLimit(2)
-                            Text(vendor.category.uppercased()).font(.caption).foregroundStyle(.secondary)
-                        }
-                        Spacer()
+        VStack(spacing: 0) {
+            ScreenHeaderView(title: "Vendors", showAppIcon: false)
+                .padding(.horizontal, 16)
+
+            // Search Bar + Filter Icon Row
+            HStack(spacing: 8) {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search Vendors", text: $query)
+                        .foregroundStyle(.white)
+                    if !query.isEmpty {
                         Button {
-                            favorites.toggle(vendor.name)
+                            query = ""
                         } label: {
-                            Image(systemName: favorites.ids.contains(vendor.name) ? "heart.fill" : "heart")
-                                .foregroundStyle(favorites.ids.contains(vendor.name) ? Color.pink : Color.secondary)
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
                         }
-                        .buttonStyle(.plain)
                     }
-                    .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
+                }
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
+
+                Menu {
+                    ForEach(["Brewery", "Food Truck"], id: \.self) { c in
+                        Button(action: { toggle(category: c) }) {
+                            Label(c, systemImage: selected.contains(c) ? "checkmark" : "")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                        .font(.title2)
+                        .foregroundStyle(Color.aestheticGold)
+                        .padding(.trailing, 4)
                 }
             }
-            .listRowBackground(Color.clear)
-        }
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Search Vendors")
-        .toolbar {
-            Menu {
-                ForEach(["Brewery", "Food Truck"], id: \.self) { c in
-                    Button(action: { toggle(category: c) }) {
-                        Label(c, systemImage: selected.contains(c) ? "checkmark" : "")
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+
+            // Vendor List
+            List {
+                Section {
+                    ForEach(filtered) { vendor in
+                        HStack(alignment: .top, spacing: 12) {
+                            ZStack {
+                                Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 40, height: 40)
+                                if UIImage(named: assetName(from: vendor.name)) != nil {
+                                    Image(assetName(from: vendor.name))
+                                        .resizable().scaledToFill().frame(width: 36, height: 36).clipShape(Circle())
+                                } else {
+                                    Image(systemName: iconName(for: vendor.category)).foregroundStyle(.secondary)
+                                }
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(vendor.name).fontWeight(.semibold)
+                                Text(vendor.description).foregroundStyle(.secondary).font(.subheadline).lineLimit(2)
+                                Text(vendor.category.uppercased()).font(.caption2).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button {
+                                favorites.toggle(vendor.name)
+                            } label: {
+                                Image(systemName: favorites.ids.contains(vendor.name) ? "heart.fill" : "heart")
+                                    .foregroundStyle(favorites.ids.contains(vendor.name) ? Color.pink : Color.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(8)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
                     }
                 }
-            } label: { Image(systemName: "line.3.horizontal.decrease.circle") }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+            }
+            .scrollContentBackground(.hidden)
+            .listStyle(.plain)
         }
-        .navigationTitle("Vendors")
-        .navigationBarTitleDisplayMode(.inline)
-        .scrollContentBackground(.hidden)
         .background(Color.deepNavy)
-        .listStyle(.plain)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private func toggle(category: String) {
@@ -377,272 +550,167 @@ struct EntertainmentView: View {
     var schedule: [ScheduleItem] { eventData?.schedule ?? [] }
 
     var body: some View {
-        List {
-            Section("Ground Entertainment") {
-                Label("Jane Doe — Entertainment Host", systemImage: "mic.fill")
-                    .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                    .listRowBackground(Color.clear)
-                Label("DJ Mixmaster — Live Music DJ", systemImage: "music.note")
-                    .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                    .listRowBackground(Color.clear)
-                Label("John Smith — National Anthem", systemImage: "person.wave.2.fill")
-                    .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                    .listRowBackground(Color.clear)
-            }
-            Section("In Flight Performers") {
-                Label("Wild Bill — Steven Hanshew", systemImage: "mic.fill")
-                    .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                    .listRowBackground(Color.clear)
-                Label("Team Fastrax — Opening Jump", systemImage: "airplane")
-                    .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                    .listRowBackground(Color.clear)
-            }
-            Section("Event Schedule") {
-                ForEach(schedule, id: \.id) { item in
-                    HStack {
-                        Image(systemName: "calendar")
-                        VStack(alignment: .leading) {
-                            Text(item.event)
-                            Text(item.time).foregroundStyle(Color.aestheticGold).font(.subheadline)
+        VStack(spacing: 0) {
+            ScreenHeaderView(title: "Events", showAppIcon: false)
+                .padding(.horizontal, 16)
+
+            List {
+                Section("Ground Entertainment") {
+                    Label("Jane Doe — Entertainment Host", systemImage: "mic.fill")
+                        .padding(12)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                    Label("DJ Mixmaster — Live Music DJ", systemImage: "music.note")
+                        .padding(12)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                    Label("John Smith — National Anthem", systemImage: "person.wave.2.fill")
+                        .padding(12)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+                Section("In Flight Performers") {
+                    Label("Wild Bill — Steven Hanshew", systemImage: "mic.fill")
+                        .padding(12)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                    Label("Team Fastrax — Opening Jump", systemImage: "airplane")
+                        .padding(12)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+                Section("Event Schedule") {
+                    ForEach(schedule, id: \.id) { item in
+                        HStack {
+                            Image(systemName: "calendar")
+                            VStack(alignment: .leading) {
+                                Text(item.event)
+                                Text(item.time).foregroundStyle(Color.aestheticGold).font(.subheadline)
+                            }
+                            Spacer()
                         }
-                        Spacer()
+                        .padding(16)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
-                    .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.primaryNavy))
-                    .listRowBackground(Color.clear)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .listStyle(.plain)
+            .listRowSpacing(0)
         }
-        .navigationTitle("Events")
-        .navigationBarTitleDisplayMode(.inline)
-        .scrollContentBackground(.hidden)
         .background(Color.deepNavy)
-        .listStyle(.plain)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
-// MARK: - Map Overlay State
-final class MapOverlayState: ObservableObject {
-    @Published var zoomScale: CGFloat = 1.0
-    @Published var selectedRegionId: String? = nil
+// MARK: - OpenStreetMap Route View (Leaflet)
+struct OSMRouteView: UIViewRepresentable {
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.isOpaque = false
+        webView.backgroundColor = UIColor(Color.deepNavy)
+        
+        let html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <style>
+                body, html, #map { height: 100%; width: 100%; margin: 0; padding: 0; background: #0A192F; }
+                .leaflet-container { background: #0A192F; }
+            </style>
+        </head>
+        <body>
+            <div id="map"></div>
+            <script>
+                var map = L.map('map').setView([39.5255, -84.3950], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+
+                var waypoints = [
+                    [39.5219738270208, -84.39756916125495],
+                    [39.52392228883309, -84.39758570695065],
+                    [39.523858475447454, -84.39595871354263],
+                    [39.527066399999974, -84.39509747693043],
+                    [39.527587748793955, -84.39398167808926],
+                    [39.52815437416716, -84.39416932546087],
+                    [39.528705851297936, -84.39335856931429],
+                    [39.52926176496046, -84.39276198740617]
+                ];
+
+                var polyline = L.polyline(waypoints, {color: '#F7D08A', weight: 5, opacity: 0.9}).addTo(map);
+                
+                L.marker(waypoints[0]).addTo(map).bindPopup('<b>Start:</b> 500 Tytus Ave');
+                L.marker(waypoints[waypoints.length - 1]).addTo(map).bindPopup('<b>Destination:</b> Start Skydiving (1711 Run Way)');
+
+                map.fitBounds(polyline.getBounds(), {padding: [30, 30]});
+            </script>
+        </body>
+        </html>
+        """
+        webView.loadHTMLString(html, baseURL: nil)
+        return webView
+    }
+
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
 }
 
-// MARK: - Map (Zoomable SVG with progressive detail)
+// MARK: - Map Main Container View
 struct MapContainerView: View {
     let eventData: EventData?
     @ObservedObject var favorites: FavoritesStore
-
-    @StateObject private var overlayState = MapOverlayState()
+    @State private var selectedTab: Int = 0
 
     var body: some View {
-        ZStack {
-            MapView(svgName: "map", eventData: eventData, favorites: favorites, overlayState: overlayState)
-            MapOverlayView(eventData: eventData, favorites: favorites, overlayState: overlayState)
-            if overlayState.zoomScale > 1.2 || overlayState.selectedRegionId != nil {
-                Button {
-                    overlayState.zoomScale = 1.0
-                    overlayState.selectedRegionId = nil
-                } label: {
-                    Image(systemName: "arrow.counterclockwise")
-                        .padding(10)
-                        .background(.ultraThinMaterial, in: Circle())
+        VStack(spacing: 0) {
+            ScreenHeaderView(title: "Map", showAppIcon: false)
+                .padding(.horizontal, 16)
+
+            Picker("Map Option", selection: $selectedTab) {
+                Text("Event Map").tag(0)
+                Text("Getting to Event").tag(1)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+
+            if selectedTab == 0 {
+                // Cleared Event Map Placeholder View
+                ZStack {
+                    Color.deepNavy
+                    VStack(spacing: 12) {
+                        Image(systemName: "map.fill")
+                            .font(.system(size: 48))
+                            .foregroundStyle(Color.aestheticGold)
+                        Text("Event Map Coming Soon")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                    }
                 }
-                .padding()
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                OSMRouteView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .background(Color.deepNavy)
-        .ignoresSafeArea()
-        .navigationTitle("Event Map")
-        .navigationBarTitleDisplayMode(.inline)
+        .ignoresSafeArea(edges: .bottom)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "map"]) }
-    }
-}
-
-struct MapOverlayView: View {
-    let eventData: EventData?
-    @ObservedObject var favorites: FavoritesStore
-    @ObservedObject var overlayState: MapOverlayState
-
-    var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .topLeading) {
-                // Vendor overlays by zoom thresholds
-                if let vendors = eventData?.vendors {
-                    ForEach(vendors, id: \.name) { vendor in
-                        if let regionId = vendor.mapId, let anchor = anchorForRegion(id: regionId, in: geo.size) {
-                            let isFav = favorites.ids.contains(vendor.name)
-                            let isSelected = overlayState.selectedRegionId == regionId
-                            let z = overlayState.zoomScale
-
-                            Group {
-                                if z > 5.5 || isFav || isSelected {
-                                    // Logo/Label
-                                    VStack(spacing: 4) {
-                                        overlayCircle(size: 40, fill: isSelected ? Color.aestheticGold : (isFav ? Color.pink : Color.primaryNavy), stroke: Color.white)
-                                            .overlay(logoView(for: vendor.name).clipShape(Circle()))
-                                        if z > 7.5 || isSelected {
-                                            Text(vendor.name)
-                                                .font(.caption2)
-                                                .fontWeight(.semibold)
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                                .background(Color.black.opacity(isSelected ? 0.8 : 0.6), in: RoundedRectangle(cornerRadius: 4))
-                                                .fixedSize()
-                                        }
-                                    }
-                                } else if z > 3.5 {
-                                    // Booth number (derived from regionId digits)
-                                    let booth = regionId.filter { $0.isNumber }
-                                    overlayCircle(size: 28, fill: Color.primaryNavy, stroke: Color.aestheticGold)
-                                        .overlay(Text(booth.isEmpty ? "?" : booth).font(.caption).fontWeight(.bold).foregroundColor(.white))
-                                } else {
-                                    // Category icon
-                                    overlayCircle(size: 20, fill: Color.primaryNavy, stroke: Color.secondarySlate)
-                                        .overlay(Image(systemName: iconName(for: vendor.category)).font(.system(size: 10)).foregroundColor(Color.aestheticGold))
-                                }
-                            }
-                            .position(anchor)
-                            .onTapGesture { overlayState.selectedRegionId = regionId }
-                        }
-                    }
-                }
-
-                // HUD for debug
-                VStack(spacing: 6) {
-                    if let id = overlayState.selectedRegionId {
-                        Text("Selected: \(id)").font(.caption).padding(6).background(Color.black.opacity(0.6), in: Capsule()).foregroundColor(.white)
-                    }
-                    Text(String(format: "Zoom: %.2fx", overlayState.zoomScale)).font(.caption2).padding(4).background(Color.black.opacity(0.5), in: Capsule()).foregroundColor(.white)
-                }
-                .padding(.top, 8)
-                .frame(maxWidth: .infinity, alignment: .top)
-            }
-        }
-        .allowsHitTesting(true)
-    }
-
-    private func overlayCircle(size: CGFloat, fill: Color, stroke: Color) -> some View {
-        Circle().fill(fill).frame(width: size, height: size).overlay(Circle().stroke(stroke, lineWidth: 2))
-    }
-    private func logoView(for name: String) -> some View {
-        if UIImage(named: assetName(from: name)) != nil {
-            return AnyView(Image(assetName(from: name)).resizable().scaledToFill())
-        } else {
-            return AnyView(Image(systemName: "photo").resizable().scaledToFit().padding(6).foregroundColor(.white))
-        }
-    }
-    private func assetName(from name: String) -> String {
-        let lower = name.lowercased()
-        let underscored = lower.replacingOccurrences(of: " ", with: "_")
-        return underscored.replacingOccurrences(of: "[^a-z0-9_]", with: "", options: .regularExpression)
-    }
-    private func iconName(for category: String) -> String {
-        if category.localizedCaseInsensitiveContains("Food") { return "fork.knife" }
-        if category.localizedCaseInsensitiveContains("Brewery") { return "wineglass" }
-        if category.localizedCaseInsensitiveContains("Spirits") { return "wineglass" }
-        return "cart"
-    }
-    // Map region -> screen anchor approximation. Without true SVG geometry, we place anchors evenly as a placeholder.
-    private func anchorForRegion(id: String, in size: CGSize) -> CGPoint? {
-        // Placeholder: distribute anchors in a grid based on hash of id
-        let hash = abs(id.hashValue)
-        let cols = 6
-        let rows = 6
-        let col = hash % cols
-        let row = (hash / cols) % rows
-        let x = CGFloat(col + 1) / CGFloat(cols + 1) * size.width
-        let y = CGFloat(row + 1) / CGFloat(rows + 1) * size.height
-        return CGPoint(x: x, y: y)
-    }
-}
-
-// Simple WebKit-based SVG renderer with overlay logic hooks. You asked for progressive detail on zoom; we start with a working SVG view and hooks for detail overlays.
-struct MapView: UIViewRepresentable {
-    let svgName: String
-    let eventData: EventData?
-    @ObservedObject var favorites: FavoritesStore
-    @ObservedObject var overlayState: MapOverlayState
-
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
-
-    func makeUIView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        let contentController = WKUserContentController()
-
-        // JS to report zoom scale and taps
-        let js = """
-        (function(){
-            function send(msg){ window.webkit.messageHandlers.mapBridge.postMessage(msg); }
-            document.addEventListener('click', function(e){
-                var target = e.target;
-                var id = target.id || (target.closest('[id]') ? target.closest('[id]').id : null);
-                if(id){ send({type:'tap', id:id}); }
-            }, true);
-            var lastScale = 1.0;
-            function reportScale(){
-                var scale = window.visualViewport ? window.visualViewport.scale : 1.0;
-                if(scale !== lastScale){ lastScale = scale; send({type:'zoom', scale: scale}); }
-                window.requestAnimationFrame(reportScale);
-            }
-            reportScale();
-        })();
-        """
-        let userScript = WKUserScript(source: js, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
-        contentController.addUserScript(userScript)
-        contentController.add(context.coordinator, name: "mapBridge")
-        config.userContentController = contentController
-
-        let web = WKWebView(frame: .zero, configuration: config)
-        web.isOpaque = false
-        web.backgroundColor = UIColor(Color.deepNavy)
-        web.scrollView.minimumZoomScale = 1.0
-        web.scrollView.maximumZoomScale = 8.0
-
-        if let url = Bundle.main.url(forResource: svgName, withExtension: "svg") {
-            web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
-        }
-        return web
-    }
-
-    func updateUIView(_ uiView: WKWebView, context: Context) {
-        // Optionally, could programmatically reset zoom/selection via JS
-    }
-
-    final class Coordinator: NSObject, WKScriptMessageHandler {
-        let parent: MapView
-        init(_ parent: MapView) { self.parent = parent }
-        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-            guard message.name == "mapBridge" else { return }
-            if let dict = message.body as? [String: Any] {
-                if let type = dict["type"] as? String {
-                    switch type {
-                    case "zoom":
-                        if let scale = dict["scale"] as? CGFloat {
-                            DispatchQueue.main.async { self.parent.overlayState.zoomScale = max(1.0, scale) }
-                        }
-                    case "tap":
-                        if let id = dict["id"] as? String {
-                            DispatchQueue.main.async { self.parent.overlayState.selectedRegionId = id }
-                        }
-                    default: break
-                    }
-                }
-            }
-        }
     }
 }
 
 #Preview {
     ContentView()
 }
-
-// MARK: - Asset placement instructions (for you):
-// - Add event_data.json and map.svg to your Xcode project target (Build Phases -> Copy Bundle Resources). Name the files exactly: event_data.json and map.svg.
-// - Place sponsor/vendor logos in the Asset Catalog with names matching your vendor/sponsor identifiers, or keep SF Symbols fallback.
-
