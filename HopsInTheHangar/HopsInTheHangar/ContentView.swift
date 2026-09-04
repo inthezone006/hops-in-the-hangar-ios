@@ -212,9 +212,6 @@ struct ContentView: View {
             NavigationStack { SponsorsView(eventData: eventData).onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "sponsors"]) } }
                 .tabItem { Label("Sponsors", systemImage: "star.fill") }
 
-            NavigationStack { MapContainerView(eventData: eventData, favorites: favorites) }
-                .tabItem { Label("Map", systemImage: "map.fill") }
-
             NavigationStack { EntertainmentView(eventData: eventData).onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "events"]) } }
                 .tabItem { Label("Events", systemImage: "list.bullet.rectangle.fill") }
 
@@ -222,6 +219,36 @@ struct ContentView: View {
                 .tabItem { Label("Vendors", systemImage: "cart.fill") }
         }
         .modifier(NavyTheme())
+    }
+}
+
+// MARK: - Clickable Answer Helper View
+struct ClickableTextView: View {
+    let text: String
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        let words = text.split(separator: " ")
+        
+        words.reduce(Text("")) { partial, wordStr in
+            let word = String(wordStr)
+            if word.hasPrefix("http://") || word.hasPrefix("https://") {
+                if let url = URL(string: word) {
+                    return partial + Text(" ") + Text(word).foregroundColor(Color.aestheticGold).underline()
+                }
+            } else if word.contains("@") && word.contains(".") {
+                if let url = URL(string: "mailto:\(word)") {
+                    return partial + Text(" ") + Text(word).foregroundColor(Color.aestheticGold).underline()
+                }
+            }
+            return partial + (partial == Text("") ? Text("") : Text(" ")) + Text(word)
+        }
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+        .environment(\.openURL, OpenURLAction { url in
+            openURL(url)
+            return .handled
+        })
     }
 }
 
@@ -276,18 +303,45 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
 
+                    // Hops 2026 Recap Card
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Hops 2026 Recap")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundStyle(Color.aestheticGold)
+                        
+                        Text("As featured on WLWT, Hops in the Hangar 2026 was a stellar celebration of craft beer and aviation. Saturday, August 22nd at the Middletown Regional Airport proved to be a perfect backdrop for a fun night where specialty beer enthusiasts and plane lovers combined their passions into one unforgettable experience.")
+                            .foregroundStyle(.secondary)
+
+                        HStack(spacing: 4) {
+                            Text("Watch the full news segment")
+                                .foregroundStyle(.secondary)
+                            Button("here") {
+                                if let url = URL(string: "https://www.wlwt.com/article/annual-hops-in-the-hangar-fundraiser-middletown-regional-airport/73466732?utm_campaign=snd-autopilot&fbclid=IwY2xjawUANr9wZG9mBWV4dG4DYWVtAjEwAGJyaWQRMVlwcXpNeXpWYUNFWWhGR29zcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEe-doI-qUEQTUaFejKpMXCGEVudnU0I_GSflwfU8n9y6sPHQnYEw02Nxthr-I_aem_yoV-Z7vcQlzoQCkJhKZvYQ") {
+                                    openURL(url)
+                                }
+                            }
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.aestheticGold)
+                            .underline()
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
+
                     // FAQ Section
                     if let faqs = eventData?.faq, !faqs.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Frequently Asked Questions")
                                 .font(.headline)
                                 .foregroundStyle(Color.aestheticGold)
-                            
+                        
                             ForEach(faqs) { item in
                                 DisclosureGroup {
-                                    Text(item.answer)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                    ClickableTextView(text: item.answer)
                                         .padding(.vertical, 6)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 } label: {
@@ -328,6 +382,22 @@ struct HomeView: View {
                                             Image(systemName: "bed.double.fill")
                                             Text(hotel.name).fontWeight(.semibold)
                                             Spacer()
+                                            let phoneString: String = {
+                                                if hotel.link.hasPrefix("tel:") {
+                                                    let raw = hotel.link.replacingOccurrences(of: "tel:", with: "")
+                                                    if raw.count == 10 {
+                                                        let a = raw.prefix(3)
+                                                        let b = raw.dropFirst(3).prefix(3)
+                                                        let c = raw.dropFirst(6)
+                                                        return "(\(a)) \(b)-\(c)"
+                                                    }
+                                                    return raw
+                                                }
+                                                return hotel.link
+                                            }()
+                                            Text(phoneString)
+                                                .font(.subheadline)
+                                                .foregroundStyle(Color.aestheticGold)
                                             Image(systemName: "chevron.forward").font(.footnote)
                                         }
                                         .padding()
@@ -374,25 +444,46 @@ struct SponsorsView: View {
     @Environment(\.openURL) private var openURL
     @State private var query = ""
     @State private var selectedTiers: Set<String> = [
-        "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Breweries"
+        "Premier", "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Breweries"
     ]
     @State private var sheetSponsor: SponsorItem? = nil
     @State private var isFilterPresented: Bool = false
 
     private let allTiers = [
-        "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Breweries"
+        "Premier", "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Breweries"
     ]
 
-    var sponsors: [SponsorItem] { eventData?.sponsors ?? [] }
+    let premierItems: [SponsorItem] = [
+        SponsorItem(name: "City of Middletown", level: "Premier", description: "City of Middletown Sponsor", website: nil, links: nil),
+        SponsorItem(name: "MWO", level: "Premier", description: "Middletown Regional Airport Sponsor", website: nil, links: nil),
+        SponsorItem(name: "Start Skydiving", level: "Premier", description: "Start Skydiving Sponsor", website: nil, links: nil),
+        SponsorItem(name: "Team Fastrax", level: "Premier", description: "Team Fastrax Sponsor", website: nil, links: nil)
+    ]
+
+    var baseSponsors: [SponsorItem] {
+        let raw = eventData?.sponsors ?? []
+        let excludedNames = ["City of Middletown", "MWO", "Start Skydiving", "Team Fastrax", "City of Middletown & MWO", "Start Skydiving & Team Fastrax"]
+        return raw.filter { sponsor in
+            !excludedNames.contains { sponsor.name.localizedCaseInsensitiveContains($0) }
+        }
+    }
     
-    var filtered: [SponsorItem] {
-        sponsors.filter { sponsor in
+    var filteredPremier: [SponsorItem] {
+        premierItems.filter { sponsor in
+            let matchesQuery = query.isEmpty || sponsor.name.localizedCaseInsensitiveContains(query)
+            let matchesTier = selectedTiers.contains("Premier")
+            return matchesQuery && matchesTier
+        }
+    }
+
+    var filteredBase: [SponsorItem] {
+        baseSponsors.filter { sponsor in
             let matchesQuery = query.isEmpty ||
                 sponsor.name.localizedCaseInsensitiveContains(query) ||
                 sponsor.level.localizedCaseInsensitiveContains(query)
             
             let matchesTier = selectedTiers.contains { tier in
-                sponsor.level.localizedCaseInsensitiveContains(tier)
+                tier != "Premier" && sponsor.level.localizedCaseInsensitiveContains(tier)
             }
             
             return matchesQuery && matchesTier
@@ -447,9 +538,54 @@ struct SponsorsView: View {
 
             // Sponsor List
             List {
-                if !sponsors.isEmpty {
+                if !filteredPremier.isEmpty {
                     Section {
-                        ForEach(filtered) { sponsor in
+                        ForEach(filteredPremier) { sponsor in
+                            Button {
+                                Analytics.logEvent("sponsor_open", parameters: ["name": sponsor.name])
+                                let urlString = sponsor.links?.first?.url ?? sponsor.website
+                                if let u = urlString, let url = URL(string: u) { openURL(url) }
+                            } label: {
+                                HStack(alignment: .center, spacing: 12) {
+                                    ZStack {
+                                        Circle().stroke(Color.aestheticGold.opacity(0.6), lineWidth: 2).frame(width: 40, height: 40)
+                                        let asset = assetName(from: sponsor.name)
+                                        if UIImage(named: asset) != nil {
+                                            Image(asset)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 36, height: 36)
+                                                .clipShape(Circle())
+                                        } else {
+                                            Image(systemName: "star.fill")
+                                                .foregroundStyle(Color.aestheticGold)
+                                        }
+                                    }
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(sponsor.name).fontWeight(.semibold).foregroundStyle(.white)
+                                        Text(sponsor.description).foregroundStyle(Color.aestheticGold.opacity(0.8)).font(.subheadline).lineLimit(2)
+                                        Text(sponsor.level).font(.caption2).foregroundStyle(Color.aestheticGold)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(8)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.aestheticGold.opacity(0.15)))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    } header: {
+                        Text("Premier Sponsors")
+                            .font(.headline)
+                            .foregroundStyle(Color.aestheticGold)
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+                }
+
+                if !filteredBase.isEmpty {
+                    Section {
+                        ForEach(filteredBase) { sponsor in
                             Button {
                                 Analytics.logEvent("sponsor_open", parameters: ["name": sponsor.name])
                                 if let links = sponsor.links, links.count > 1 {
@@ -462,8 +598,9 @@ struct SponsorsView: View {
                                 HStack(alignment: .center, spacing: 12) {
                                     ZStack {
                                         Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 40, height: 40)
-                                        if UIImage(named: assetName(from: sponsor.name)) != nil {
-                                            Image(assetName(from: sponsor.name))
+                                        let asset = assetName(from: sponsor.name)
+                                        if UIImage(named: asset) != nil {
+                                            Image(asset)
                                                 .resizable()
                                                 .scaledToFill()
                                                 .frame(width: 36, height: 36)
@@ -484,6 +621,12 @@ struct SponsorsView: View {
                                 .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
                             }
                             .buttonStyle(.plain)
+                        }
+                    } header: {
+                        if !filteredPremier.isEmpty {
+                            Text("All Sponsors")
+                                .font(.headline)
+                                .foregroundStyle(Color.aestheticGold)
                         }
                     }
                     .listRowBackground(Color.clear)
@@ -551,7 +694,17 @@ struct SponsorsView: View {
 
     private func assetName(from name: String) -> String {
         let lower = name.lowercased()
-        let underscored = lower.replacingOccurrences(of: " ", with: "_")
+        if lower.contains("mwo") || lower.contains("middletown regional airport") {
+            return "mwo"
+        }
+        if lower.contains("kara goheen") {
+            return "kara_goheen_friends_and_furball"
+        }
+        if lower.contains("affordable dentures") {
+            return "affordable_dentures_and_implants"
+        }
+        let underscored = lower.replacingOccurrences(of: " & ", with: "_")
+            .replacingOccurrences(of: " ", with: "_")
         return underscored.replacingOccurrences(of: "[^a-z0-9_]", with: "", options: .regularExpression)
     }
 }
@@ -629,8 +782,9 @@ struct VendorsView: View {
                         HStack(alignment: .center, spacing: 12) {
                             ZStack {
                                 Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 40, height: 40)
-                                if UIImage(named: assetName(from: vendor.name)) != nil {
-                                    Image(assetName(from: vendor.name))
+                                let asset = assetName(from: vendor.name)
+                                if UIImage(named: asset) != nil {
+                                    Image(asset)
                                         .resizable().scaledToFill().frame(width: 36, height: 36).clipShape(Circle())
                                 } else {
                                     Image(systemName: iconName(for: vendor.category)).foregroundStyle(.secondary)
@@ -702,32 +856,62 @@ struct EntertainmentView: View {
                     SectionTitleHeader(title: "Ground Entertainment", isFirst: true)
                     
                     EntertainmentRow(
-                        title: "Jane Doe — Entertainment Host",
-                        subtitle: "Ground Host",
-                        icon: "mic.fill"
-                    )
-                    EntertainmentRow(
-                        title: "DJ Mixmaster — Live Music DJ",
+                        title: "DJ Ron Perry — Live Music DJ",
                         subtitle: "Live Performance",
                         icon: "music.note"
                     )
                     EntertainmentRow(
-                        title: "John Smith — National Anthem",
+                        title: "Jennifer Kauffman — National Anthem",
                         subtitle: "Special Vocalist",
                         icon: "person.wave.2.fill"
+                    )
+                    EntertainmentRow(
+                        title: "Steel Drum Dave — Check In Entertainment",
+                        subtitle: "Live Performance",
+                        icon: "music.note"
                     )
 
                     // MARK: In Flight Performers
                     SectionTitleHeader(title: "In Flight Performers")
                     
                     EntertainmentRow(
-                        title: "Wild Bill — Steven Hanshew",
-                        subtitle: "Aerobatic Performer",
+                        title: "Wild Bill (Steve Henshew)",
+                        subtitle: "Announcer",
                         icon: "mic.fill"
                     )
                     EntertainmentRow(
-                        title: "Team Fastrax — Opening Jump",
-                        subtitle: "Skydiving Exhibition",
+                        title: "Team Fastrax (Nicole Condrey)",
+                        subtitle: "Flag Jump",
+                        icon: "airplane"
+                    )
+                    EntertainmentRow(
+                        title: "Nick Coleman",
+                        subtitle: "Aerobatic Performance",
+                        icon: "airplane"
+                    )
+                    EntertainmentRow(
+                        title: "Bob Richards",
+                        subtitle: "Aerobatic Performance",
+                        icon: "airplane"
+                    )
+                    EntertainmentRow(
+                        title: "Smoke on Aviation Team",
+                        subtitle: "8 Pilot Formation Team",
+                        icon: "airplane"
+                    )
+                    EntertainmentRow(
+                        title: "Mike Hartman",
+                        subtitle: "Aerobatic Performance",
+                        icon: "airplane"
+                    )
+                    EntertainmentRow(
+                        title: "Emerson Stewart III",
+                        subtitle: "Aerobatic Performance",
+                        icon: "airplane"
+                    )
+                    EntertainmentRow(
+                        title: "Rob LeCerda",
+                        subtitle: "Aerobatic Performance",
                         icon: "airplane"
                     )
 
@@ -809,127 +993,6 @@ private struct EntertainmentRow: View {
         }
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
-    }
-}
-
-// MARK: - OpenStreetMap Route View (Leaflet)
-struct OSMRouteView: UIViewRepresentable {
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        webView.isOpaque = false
-        webView.backgroundColor = UIColor(Color.deepNavy)
-        
-        let html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-            <style>
-                body, html, #map { height: 100%; width: 100%; margin: 0; padding: 0; background: #0A192F; }
-                .leaflet-container { background: #0A192F; }
-            </style>
-        </head>
-        <body>
-            <div id="map"></div>
-            <script>
-                var map = L.map('map').setView([39.5255, -84.3950], 15);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap'
-                }).addTo(map);
-
-                var waypoints = [
-                    [39.5219738270208, -84.39756916125495],
-                    [39.52392228883309, -84.39758570695065],
-                    [39.523858475447454, -84.39595871354263],
-                    [39.527066399999974, -84.39509747693043],
-                    [39.527587748793955, -84.3938167808926],
-                    [39.52815437416716, -84.39416932546087],
-                    [39.528705851297936, -84.39335856931429],
-                    [39.52926176496046, -84.39276198740617]
-                ];
-
-                var polyline = L.polyline(waypoints, {color: '#F7D08A', weight: 5, opacity: 0.9}).addTo(map);
-                
-                L.marker(waypoints[0]).addTo(map).bindPopup('<b>Start:</b> 500 Tytus Ave');
-                L.marker(waypoints[waypoints.length - 1]).addTo(map).bindPopup('<b>Destination:</b> Start Skydiving (1711 Run Way)');
-
-                map.fitBounds(polyline.getBounds(), {padding: [30, 30]});
-            </script>
-        </body>
-        </html>
-        """
-        webView.loadHTMLString(html, baseURL: nil)
-        return webView
-    }
-
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
-}
-
-// MARK: - Map Main Container View
-struct MapContainerView: View {
-    let eventData: EventData?
-    @ObservedObject var favorites: FavoritesStore
-    @State private var selectedTab: Int = 0
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            // Background Base
-            Color.deepNavy
-                .ignoresSafeArea()
-
-            // Content Area
-            if selectedTab == 0 {
-                VStack(spacing: 0) {
-                    ScreenHeaderView(title: "Map", showAppIcon: false)
-                        .padding(.horizontal, 16)
-
-                    Picker("Map Option", selection: $selectedTab) {
-                        Text("Event Map").tag(0)
-                        Text("Getting to Event").tag(1)
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-
-                    ZStack {
-                        Color.deepNavy
-                        VStack(spacing: 12) {
-                            Image(systemName: "map.fill")
-                                .font(.system(size: 48))
-                                .foregroundStyle(Color.aestheticGold)
-                            Text("Event Map Coming Soon")
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-            } else {
-                // Leaflet Map layer extending edge-to-edge
-                OSMRouteView()
-                    .ignoresSafeArea(edges: .bottom)
-
-                // Floating Header Controls pinned to top
-                VStack(spacing: 0) {
-                    ScreenHeaderView(title: "Map", showAppIcon: false)
-                        .padding(.horizontal, 16)
-
-                    Picker("Map Option", selection: $selectedTab) {
-                        Text("Event Map").tag(0)
-                        Text("Getting to Event").tag(1)
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                }
-                .background(Color.deepNavy)
-            }
-        }
-        .toolbar(.hidden, for: .navigationBar)
-        .onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "map"]) }
     }
 }
 

@@ -1,58 +1,250 @@
 {
   "sponsors": [
-    {
-      "name": "City of Middletown & MWO",
-      "level": "Top Flight",
-      "description": "Top Flight Airshow Sponsor",
-      "links": [
-        { "label": "City of Middletown", "url": "https://www.cityofmiddletown.org" },
-        { "label": "MWO (Middletown Regional Airport)", "url": "https://flymwo.com" }
-      ]
-    },
-    {
-      "name": "Start Skydiving & Team Fastrax",
-      "level": "First Class",
-      "description": "First Class Sponsor",
-      "links": [
-        { "label": "Start Skydiving", "url": "https://startskydiving.com" },
-        { "label": "Team Fastrax", "url": "https://teamfastrax.com" }
-      ]
-    },
+    { "name": "City of Middletown", "level": "Top Flight", "description": "Top Flight Airshow Sponsor", "website": "https://www.cityofmiddletown.org"},
+    { "name": "MWO", "level": "Top Flight", "description": "Top Flight Airshow Sponsor", "website": "https://flymwo.com"},
+    {"name": "Start Skydiving", "level": "First Class", "description": "First Class Sponsor", "website": "https://startskydiving.com"},
+    {"name": "Team Fastrax", "level": "First Class", "description": "First Class Sponsor", "website": "https://teamfastrax.com"},
     { "name": "Safe Skies Aviation, LLC", "level": "Business Class", "description": "Business Class Sponsor", "website": "https://safeskiesaviation.com" },
     { "name": "Balloon Dog Events", "level": "Business Class", "description": "Business Class Sponsor", "website": "https://www.balloondogevents.com" },
     { "name": "Thread Headz", "level": "Business Class", "description": "Business Class Sponsor", "website": "https://threadheadzz.com/home/comingsoon" },
     { "name": "Lewis Horticultural Service", "level": "Business Class", "description": "Business Class Sponsor", "website": "http://lewishorticultural.com" },
     { "name": "BB Tech Services", "level": "Business Class", "description": "Business Class Sponsor", "website": "https://bbtechservices.com" },
     { "name": "Middletown Community Foundation", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://mcfoundation.org" },
-    { "name": "Askren Balloon Team", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://askrenballoonteam.com" },
+    { "name": "Askren Air Balloon Team", "level": "Business Class", "description": "Business Class Sponsor", "website": "https://askrenballoonteam.com", "mapId": "Askren Air Balloon Team" },
+    { "name": "RH Seals", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://www.rhseals.com/" },
+    { "name": "Cook Howard Law Ltd.", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://www.cookhowardlaw.com/" },
+    { "name": "Hanke Optometry", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://www.hankeoptometry.com/" },
+    { "name": "Eiford Dental", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://www.hankeoptometry.com/" },
+    { "name": "Xponex", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://www.xponex.com/" },
     { "name": "Hartzell Propeller", "level": "Coach Class", "description": "Coach Class Sponsor", "website": "https://hartzellprop.com" },
     { "name": "Valley Central Bank", "level": "Passport", "description": "Passport Sponsor", "website": "https://valleycentral.org" },
     { "name": "Midwest Air Recovery", "level": "Passport", "description": "Passport Sponsor", "website": "http://midwestairrecovery.com" },
     { "name": "Big Daddy Dumpsters", "level": "Passport", "description": "Passport Sponsor", "website": "https://bigdaddydumpsters.com" },
     { "name": "Miami Valley Propane", "level": "Passport", "description": "Passport Sponsor", "website": "https://mvpropane.com" },
     { "name": "Phillips Tube Group", "level": "Passport", "description": "Passport Sponsor", "website": "https://phillipstube.com" },
-    { "name": "Kara Goheen Friends & Furball", "level": "Passport", "description": "Passport Sponsor", "website": "https://furballmiddletown.com" },
-    { "name": "New Ales Brewing", "level": "Brewery", "description": "Sponsoring Brewery", "website": "https://www.newalesbrewing.com" }
+    { "name": "Kara Goheen Friends and Furball", "level": "Passport", "description": "Passport Sponsor", "website": "https://furballmiddletown.com" },
+    { "name": "Affordable Dentures and Implants", "level": "Passport", "description": "Passport Sponsor", "website": "https://www.affordabledentures.com/" },
+    { "name": "Veracruz Mexican Restaurant", "level": "Passport", "description": "Passport Sponsor", "website": "https://www.facebook.com/veracruzmiddletown/" },
+    { "name": "Renewal by Andersen", "level": "Passport", "description": "Passport Sponsor", "website": "https://www.renewalbyandersen.com/" },
+    { "name": "New Ales Brewing", "level": "Brewery", "description": "Sponsoring Brewery", "website": "https://www.newalesbrewing.com", "mapId": "New Ales" },
+    { "name": "Heavier Than Air Brewing Co.", "level": "Brewery", "description": "Sponsoring Brewery", "website": "https://heavierthanairbrewing.com/", "mapId": "Heavier than Air" },
+    { "name": "Loose Ends Brewing Company", "level": "Brewery", "description": "Sponsoring Brewery", "website": "https://looseendsbrewing.com/", "mapId": "Loose Ends" }
   ],
   "vendors": [
-    { "name": "High Grain Brewing", "category": "Brewery", "description": "Cincinnati, OH", "email": "info@highgrainbrewing.com", "phone": "513-620-8300", "website": "https://highgrainbrewing.com", "mapId": "Beer Booth 1" },
-    { "name": "Dafuque Beer Company", "category": "Brewery", "description": "Local Favorite", "email": "info@dafuquebeer.com", "phone": "614-204-5147", "website": "https://dafuquebeer.com", "mapId": "Beer Booth 2" },
-    { "name": "Streetside Brewery", "category": "Brewery", "description": "Cincinnati, OH", "email": "info@streetsidebrewery.com", "phone": "513-615-5877", "website": "https://streetsidebrewery.com", "mapId": "Beer Booth 3" },
-    { "name": "Loose Ends Brewing", "category": "Brewery", "description": "Centerville, OH", "email": "info@looseendsbrewing.com", "phone": "937-723-6328", "website": "https://www.looseendsbrewing.com", "mapId": "Beer Booth 4" },
-    { "name": "Third Eye Brewing", "category": "Brewery", "description": "Sharonville, OH", "email": "info@thirdeyebrewingco.com", "phone": "513-771-2739", "website": "https://thirdeyebrewingco.com", "mapId": "Beer Booth 5" },
-    { "name": "Gravel Road Brewing Co", "category": "Brewery", "description": "Middletown, OH", "email": "contact@gravelroadbrewing.com", "phone": "513-594-8251", "website": "http://gravelroadbrewing.com", "mapId": "Beer Booth 6" },
-    { "name": "Depot Brewing Company", "category": "Brewery", "description": "Fairborn, OH", "email": "contact@depotbrewing.com", "phone": "513-796-3661", "website": "https://www.depotbrewing.com", "mapId": "Beer Booth 7" },
-    { "name": "Sonder Brewing", "category": "Brewery", "description": "Mason, OH", "email": "contactus@sonderbrewing.com", "phone": "513-779-2739", "website": "https://sonderbrewing.com", "mapId": "Beer Booth 8" },
-    { "name": "Stevens Point Brewery", "category": "Brewery", "description": "Stevens Point, WI", "email": "info@pointbeer.com", "phone": "715-344-9310", "website": "https://www.pointbeer.com", "mapId": "Beer Booth 9" },
-    { "name": "Heavier Than Air Brewing Co", "category": "Brewery", "description": "Centerville, OH", "email": "info@heavierthanairbrewing.com", "phone": "937-433-1500", "website": "https://heavierthanairbrewing.com", "mapId": "Beer Booth 10" },
-    { "name": "NEW Ales Brewing", "category": "Brewery", "description": "Middletown, OH", "email": "middletownbeerandsandwiches@gmail.com", "phone": "513-915-7023", "website": "https://www.newalesbrewing.com", "mapId": "Beer Booth 11" },
-    { "name": "BC's Brewing Company", "category": "Brewery", "description": "Mason, OH", "email": "info@bcsbrewing.com", "phone": "513-847-6866", "website": "https://www.bcsbrewing.com", "mapId": "Beer Booth 12" }
+    {
+      "name": "Hamburger Wagon",
+      "category": "Food Truck",
+      "description": "Miamisburg, OH",
+      "email": "playmiamisburg@cityofmiamisburg.com",
+      "phone": "937-866-8999",
+      "website": "https://www.hamburgerwagon.com/",
+      "mapId": "Hamburger Wagon"
+    },
+    {
+      "name": "Mama Bear's Mac",
+      "category": "Food Truck",
+      "description": "West Chester, OH",
+      "email": "info@mamabearsmac.com",
+      "phone": "513-349-4612",
+      "website": "https://www.mamabearsmac.com",
+      "mapId": "Mama Bear's Mac"
+    },
+    {
+      "name": "Little Chef Medy",
+      "category": "Food Truck",
+      "description": "Cincinnati, OH",
+      "email": "littlechefmedy@littlechefmedy.com",
+      "phone": "513-802-2580",
+      "website": "https://littlechefmedy.com/",
+      "mapId": "Little Chef Medy"
+    },
+    {
+      "name": "Schmidt's Sausage Truck",
+      "category": "Food Truck",
+      "description": "Columbus, OH",
+      "email": "info@schmidthaus.com",
+      "phone": "614-444-6808",
+      "website": "https://schmidthaus.com/schmidts-sausage-truck",
+      "mapId": "Schmidt's Sausage Truck"
+    },
+    {
+      "name": "Graeter's",
+      "category": "Food Truck",
+      "description": "Cincinnati & Dayton, OH",
+      "email": "customercare@graeters.com",
+      "phone": "800-721-3323",
+      "website": "https://www.graeters.com/",
+      "mapId": "Graeters "
+    },
+    {
+      "name": "El Diablo Grill",
+      "category": "Food Truck",
+      "description": "Dayton, OH",
+      "email": "info@eldiablosgrill.com",
+      "phone": "937-555-0199",
+      "website": "https://streetfoodfinder.com/ElDiabloGrill",
+      "mapId": "El Diablo Grill"
+    },
+    {
+      "name": "Salty Z Pretzels",
+      "category": "Food Truck",
+      "description": "Ohio Mobile Food Trailer",
+      "email": "office@mvdsa.org",
+      "phone": "937-576-0779",
+      "website": "https://saltyzpretzels.com/",
+      "mapId": "Meijer Pretzel Station"
+    },
+    {
+      "name": "Fatto A Mano",
+      "category": "Food Truck",
+      "description": "Cincinnati, OH",
+      "email": "info@elegantbitecatering.com",
+      "phone": "513-555-0144",
+      "website": "https://streetfoodfinder.com/FattoaManoOhio",
+      "mapId": "Fatto A Mano Wood Fired Pizza"
+    },
+    {
+      "name": "Schiavones",
+      "category": "Food Truck",
+      "description": "Middletown / Southwest, OH",
+      "email": "info@schiawones.com",
+      "phone": "513-555-0188",
+      "website": "https://www.schiawones.com",
+      "mapId": "Schiavone's Italian"
+    },
+    {
+      "name": "BC's Brewing Company",
+      "category": "Brewery",
+      "description": "Mason, OH",
+      "website": "https://www.bcsbrewing.com",
+      "mapId": "BC's Brewery Company"
+    },
+    {
+      "name": "Warped Wing Brewing Co.",
+      "category": "Brewery",
+      "description": "Dayton, OH",
+      "website": "https://warpedwing.com/",
+      "mapId": "Warped Wing"
+    },
+    {
+      "name": "Third Eye Brewing",
+      "category": "Brewery",
+      "description": "Sharonville, OH",
+      "website": "https://thirdeyebrewingco.com",
+      "mapId": "Third Eye Brewing"
+    },
+    {
+      "name": "Depot Brewing Company",
+      "category": "Brewery",
+      "description": "Fairborn, OH",
+      "website": "https://www.depotbrewing.com",
+      "mapId": "Depot Brewing"
+    },
+    {
+      "name": "High Grain Brewing",
+      "category": "Brewery",
+      "description": "Cincinnati, OH",
+      "website": "https://highgrainbrewing.com",
+      "mapId": "High Grain Brewing"
+    },
+    {
+      "name": "Municipal Brew Works",
+      "category": "Brewery",
+      "description": "Hamilton, OH",
+      "website": "https://www.municipalbrewworks.com/",
+      "mapId": "Municipal Brew Works"
+    },
+    {
+      "name": "Brewer's Association",
+      "category": "Brewery",
+      "description": "National Association",
+      "website": "https://www.brewersassociation.org/",
+      "mapId": "Brewer's Association"
+    },
+    {
+      "name": "MadTree Brewing Company",
+      "category": "Brewery",
+      "description": "Cincinnati, OH",
+      "website": "https://www.madtreebrewing.com/",
+      "mapId": "MadTree Brewing Company"
+    },
+    {
+      "name": "Sonder Brewing",
+      "category": "Brewery",
+      "description": "Mason, OH",
+      "website": "https://sonderbrewing.com/",
+      "mapId": "Sonder Brewing"
+    },
+    {
+      "name": "Toxic Brew Company",
+      "category": "Brewery",
+      "description": "Dayton, OH",
+      "website": "https://toxicbrewcompany.com/",
+      "mapId": "Toxic Brew Company"
+    },
+    {
+      "name": "Heidelberg Distributing",
+      "category": "Brewery",
+      "description": "Distributor",
+      "website": "https://www.heidelbergdistributing.com/",
+      "mapId": "Heidelberg"
+    },
+    {
+      "name": "BrewDog Brewery",
+      "category": "Brewery",
+      "description": "Columbus, OH",
+      "website": "https://www.brewdog.com/usa",
+      "mapId": "BrewDog Brewery"
+    },
+    {
+      "name": "Stevens Point Brewery",
+      "category": "Brewery",
+      "description": "Stevens Point, WI",
+      "website": "https://www.pointbeer.com",
+      "mapId": "Stevens Point Brewery"
+    },
+    {
+      "name": "Happenstance Brewing Company",
+      "category": "Brewery",
+      "description": "Cincinnati, OH",
+      "website": "https://www.happenstancebrewing.com/",
+      "mapId": "Happenstance Brewing"
+    },
+    {
+      "name": "Gravel Road Brewing Co",
+      "category": "Brewery",
+      "description": "Middletown, OH",
+      "website": "http://gravelroadbrewing.com",
+      "mapId": "Gravel Road"
+    },
+    {
+      "name": "Bitburger Brewery",
+      "category": "Brewery",
+      "description": "Germany",
+      "website": "https://www.bitburger.com/",
+      "mapId": "Bitburger"
+    },
+    {
+      "name": "Dead Low Brewing",
+      "category": "Brewery",
+      "description": "Cincinnati, OH",
+      "website": "https://www.deadlowbrewing.com/",
+      "mapId": "Dead Low"
+    },
+    {
+      "name": "Brink Brewing Co.",
+      "category": "Brewery",
+      "description": "Cincinnati, OH",
+      "website": "https://www.brinkbrewing.com/",
+      "mapId": "Brink"
+    }
   ],
   "schedule": [
     { "time": "4:00 PM", "event": "VIP Early Access" },
     { "time": "4:00 PM - 6:00 PM", "event": "Entrance Gate Live Performance" },
     { "time": "5:00 PM", "event": "General Admission Starts" },
-    { "time": "6:00 PM", "event": "Opening Jump" },
+    { "time": "6:00 PM", "event": "Opening Jump & National Anthem" },
+    { "time": "6:15 PM", "event": "Flag Jump – Nicole Condrey of Team Fastrax" },
     { "time": "9:30 PM", "event": "Event End" }
   ],
   "info": {
@@ -65,85 +257,85 @@
     ]
   },
   "faq": [
-      {
-        "question": "Where does the money generated from this event go?",
-        "answer": "Middletown Aviation Foundation will host Hops in the Hangar and is a fundraiser! 100% of the proceeds benefit a number of local area nonprofits. Our dedicated Hops team, composed of volunteers, will aim to support several local non-profits by raising both awareness and funds through this event."
-      },
-      {
-        "question": "Who organizes this event?",
-        "answer": "Middletown Aviation Foundation is the nonprofit organization. Hops in the Hangar is a unique beer event organized and run by the Board of MAF and community volunteers."
-      },
-      {
-        "question": "Prohibited items at the event",
-        "answer": "-No outside food or drink\n\n• No weapons or firearms of any kind (regardless of concealed carry permit)\n\n• No umbrellas or tents as a participant\n\n• No drugs and/or drug paraphernalia\n\n• No pets\n\n• No balloons"
-      },
-      {
-        "question": "What is the appropriate ID required for entry?",
-        "answer": "Valid forms of ID include:\n\n• A valid state driver license with a photo\n\n• A valid ID card issued by a state with photo, name, date of birth and physical description\n\n• A valid United States military identification card"
-      },
-      {
-        "question": "Are children allowed?",
-        "answer": "Minors are not allowed at this event, even small children. Every person inside the venue must be 21 or older, due to the nature of the event and our licensing."
-      },
-      {
-        "question": "Can I bring someone under the age of 21 as my designated driver?",
-        "answer": "Our license does not permit anyone under the age of 21 to be inside the event grounds. If your designated driver is under the age of 21, they are welcome to drop you off/pick you up outside the event entry gate."
-      },
-      {
-        "question": "Can I bring my pet?",
-        "answer": "This event is held at an active airport. Animals are not allowed on the event site except for ADA recognized service animals while performing their qualifying services. Please contact the event organizer for information before purchasing a ticket."
-      },
-      {
-        "question": "Is this event handicap accessible?",
-        "answer": "The event is on ground level and is wheelchair accessible. Unfortunately, there are not designated handicap parking spaces. You may however, unload near the front gate. We will have golf cart shuttles going around the park to pick people up. We are in an active airport using a park entrance with grass until you get inside the gate. Please contact us before you purchase a ticket."
-      },
-      {
-        "question": "What does it cost to enter the event?",
-        "answer": "Ticket pricing can be found on our Ticket Spice ticketing page."
-      },
-      {
-        "question": "How can I find out about the beers being served?",
-        "answer": "Breweries will be listed on our website and social media page a few months out. Most, but not all, beers will be listed prior to the day of the event. When you arrive at Hops, you can locate the brewery you want on the passport you will receive at check-in."
-      },
-      {
-        "question": "Will there be food available?",
-        "answer": "Yes. There will be several food trucks on-site offering a variety of great food and non-alcoholic beverages. These vendors usually accept both cash and credit. Our food vendors are selected so that we have a great variety of the best local fair available for our guests. We are sometimes asked if we could get more food trucks. Given the restrictions of having the event at an operating airport we pretty much max out the available space for food trucks but our vendors do a great job of preparing for the anticipated demand."
-      },
-      {
-        "question": "Can I bring outside food or drink into the venue?",
-        "answer": "Unfortunately, no. We have several options inside the event for food and beverage purchase. Water is also available at several hydration stations throughout the event."
-      },
-      {
-        "question": "Is smoking allowed?",
-        "answer": "Due to the proximity of aircraft and fuel tanks, smoking is not permitted once inside the event site."
-      },
-      {
-        "question": "Can I volunteer to pour beer?",
-        "answer": "YES, we love our volunteers! Please click on the volunteer link to sign up. https://middletownaviationfoundation.ticketspice.com/hops-in-the-hangar-2026"
-      },
-      {
-        "question": "Any gluten-free beers?",
-        "answer": "Yes! We plan to have several gluten-free options both for tasting and for purchase. Please check the passport you will receive at check in for the location of gluten-free beverages. You can also check the brewery page of our website, closer to event day for available gluten-free options."
-      },
-      {
-        "question": "I purchased a ticket but I can't find it/can't print it, what do I do?",
-        "answer": "Please check your email from Middletown Aviation Foundation/Ticketspice. If you need customer service regarding your ticket purchase, please email hopsinthehangar@gmail.com for assistance."
-      },
-      {
-        "question": "Is this event indoors or outdoors?",
-        "answer": "Both, it takes place in a large airplane hangar and apron. The event will take place rain or shine. All ticket sales are final. No refunds will be given."
-      },
-      {
-        "question": "Are designated drivers allowed in the event?",
-        "answer": "Yes. We offer two designated driver tickets options. Our VIP Designated Flyer tickets are $30 and allow early admission at 4pm as well as access to our VIP Sky Lounge tent. Our General Admission Designated Flyer ticket is $25. Both the VIP and general Admission Designated Flyer tickets include admission, 2 non-alcoholic beverage tickets available at the Hops concession tent. Designated Flyer tickets do not include access to beer and we ask that you respect that. Please note that Designated Flyer tickets, if still available, increase in price starting the week before the event. All tickets are limited and may sell out prior to the event."
-      },
-      {
-        "question": "I purchased a ticket, but now I can't attend. Now what?",
-        "answer": "We’re bummed you won’t be able to join us! While tickets are not refundable, ticket holders may give their ticket to someone else to use - similar to a concert or other ticketed event."
-      },
-      {
-        "question": "Are we allowed to leave and re-enter the event site?",
-        "answer": "No, we prefer that once you enter your in. If there is a reasonable emergency please talk to the front gate."
-      }
+    {
+      "question": "Where does the money generated from this event go?",
+      "answer": "Middletown Aviation Foundation will host Hops in the Hangar and is a fundraiser! 100% of the proceeds benefit a number of local area nonprofits. Our dedicated Hops team, composed of volunteers, will aim to support several local non-profits by raising both awareness and funds through this event."
+    },
+    {
+      "question": "Who organizes this event?",
+      "answer": "Middletown Aviation Foundation is the nonprofit organization. Hops in the Hangar is a unique beer event organized and run by the Board of MAF and community volunteers."
+    },
+    {
+      "question": "Prohibited items at the event",
+      "answer": "• No outside food or drink\n\n• No weapons or firearms of any kind (regardless of concealed carry permit)\n\n• No umbrellas or tents as a participant\n\n• No drugs and/or drug paraphernalia\n\n• No pets\n\n• No balloons"
+    },
+    {
+      "question": "What is the appropriate ID required for entry?",
+      "answer": "Valid forms of ID include:\n\n• A valid state driver license with a photo\n\n• A valid ID card issued by a state with photo, name, date of birth and physical description\n\n• A valid United States military identification card"
+    },
+    {
+      "question": "Are children allowed?",
+      "answer": "Minors are not allowed at this event, even small children. Every person inside the venue must be 21 or older, due to the nature of the event and our licensing."
+    },
+    {
+      "question": "Can I bring someone under the age of 21 as my designated driver?",
+      "answer": "Our license does not permit anyone under the age of 21 to be inside the event grounds. If your designated driver is under the age of 21, they are welcome to drop you off/pick you up outside the event entry gate."
+    },
+    {
+      "question": "Can I bring my pet?",
+      "answer": "This event is held at an active airport. Animals are not allowed on the event site except for ADA recognized service animals while performing their qualifying services. Please contact the event organizer for information before purchasing a ticket."
+    },
+    {
+      "question": "Is this event handicap accessible?",
+      "answer": "The event is on ground level and is wheelchair accessible. Unfortunately, there are not designated handicap parking spaces. You may however, unload near the front gate. We will have golf cart shuttles going around the park to pick people up. We are in an active airport using a park entrance with grass until you get inside the gate. Please contact us before you purchase a ticket."
+    },
+    {
+      "question": "What does it cost to enter the event?",
+      "answer": "Ticket pricing can be found on our Ticket Spice ticketing page."
+    },
+    {
+      "question": "How can I find out about the beers being served?",
+      "answer": "Breweries will be listed on our website and social media page a few months out. Most, but not all, beers will be listed prior to the day of the event. When you arrive at Hops, you can locate the brewery you want on the passport you will receive at check-in."
+    },
+    {
+      "question": "Will there be food available?",
+      "answer": "Yes. There will be several food trucks on-site offering a variety of great food and non-alcoholic beverages. These vendors usually accept both cash and credit. Our food vendors are selected so that we have a great variety of the best local fair available for our guests. We are sometimes asked if we could get more food trucks. Given the restrictions of having the event at an operating airport we pretty much max out the available space for food trucks but our vendors do a great job of preparing for the anticipated demand."
+    },
+    {
+      "question": "Can I bring outside food or drink into the venue?",
+      "answer": "Unfortunately, no. We have several options inside the event for food and beverage purchase. Water is also available at several hydration stations throughout the event."
+    },
+    {
+      "question": "Is smoking allowed?",
+      "answer": "Due to the proximity of aircraft and fuel tanks, smoking is not permitted once inside the event site."
+    },
+    {
+      "question": "Can I volunteer to pour beer?",
+      "answer": "YES, we love our volunteers! Please click on the volunteer link to sign up. https://middletownaviationfoundation.ticketspice.com/hops-in-the-hangar-2026"
+    },
+    {
+      "question": "Any gluten-free beers?",
+      "answer": "Yes! We plan to have several gluten-free options both for tasting and for purchase. Please check the passport you will receive at check in for the location of gluten-free beverages. You can also check the brewery page of our website, closer to event day for available gluten-free options."
+    },
+    {
+      "question": "I purchased a ticket but I can't find it/can't print it, what do I do?",
+      "answer": "Please check your email from Middletown Aviation Foundation/Ticketspice. If you need customer service regarding your ticket purchase, please email hopsinthehangar@gmail.com for assistance."
+    },
+    {
+      "question": "Is this event indoors or outdoors?",
+      "answer": "Both, it takes place in a large airplane hangar and apron. The event will take place rain or shine. All ticket sales are final. No refunds will be given."
+    },
+    {
+      "question": "Are designated drivers allowed in the event?",
+      "answer": "Yes. We offer two designated driver tickets options. Our VIP Designated Flyer tickets are $30 and allow early admission at 4pm as well as access to our VIP Sky Lounge tent. Our General Admission Designated Flyer ticket is $25. Both the VIP and general Admission Designated Flyer tickets include admission, 2 non-alcoholic beverage tickets available at the Hops concession tent. Designated Flyer tickets do not include access to beer and we ask that you respect that. Please note that Designated Flyer tickets, if still available, increase in price starting the week before the event. All tickets are limited and may sell out prior to the event."
+    },
+    {
+      "question": "I purchased a ticket, but now I can't attend. Now what?",
+      "answer": "We’re bummed you won’t be able to join us! While tickets are not refundable, ticket holders may give their ticket to someone else to use - similar to a concert or other ticketed event."
+    },
+    {
+      "question": "Are we allowed to leave and re-enter the event site?",
+      "answer": "No, we prefer that once you enter your in. If there is a reasonable emergency please talk to the front gate."
+    }
   ]
 }
