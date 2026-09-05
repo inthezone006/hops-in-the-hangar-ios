@@ -1,26 +1,154 @@
 import SwiftUI
-import WebKit
 import Combine
 import FirebaseAnalytics
 import UIKit
+
+// MARK: - Color Palette & Constants
+extension Color {
+    static let neoYellow = Color(red: 1.0, green: 0.92, blue: 0.23) // #FFE93B
+    static let neoPink = Color(red: 1.0, green: 0.44, blue: 0.70)   // #FF6FB3
+    static let neoGreen = Color(red: 0.38, green: 0.89, blue: 0.58)  // #62E495
+    static let neoBlue = Color(red: 0.34, green: 0.73, blue: 1.0)    // #57BAFF
+    static let neoWhite = Color(red: 1.0, green: 1.0, blue: 1.0)
+    static let neoBackground = Color(red: 0.96, green: 0.96, blue: 0.96)
+}
+
+// MARK: - Reusable Neo Card Component
+struct NeoCard<Content: View>: View {
+    var backgroundColor: Color = .white
+    var onClick: (() -> Void)? = nil
+    @ViewBuilder let content: Content
+
+    @State private var isPressed = false
+
+    var body: some View {
+        let shadowX: CGFloat = isPressed && onClick != nil ? 2 : 6
+        let shadowY: CGFloat = isPressed && onClick != nil ? 2 : 6
+        let transX: CGFloat = isPressed && onClick != nil ? 4 : 0
+        let transY: CGFloat = isPressed && onClick != nil ? 4 : 0
+
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.black)
+                .offset(x: shadowX, y: shadowY)
+
+            RoundedRectangle(cornerRadius: 8)
+                .fill(backgroundColor)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.black, lineWidth: 3)
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if let click = onClick {
+                        withAnimation(.easeInOut(duration: 0.1)) { isPressed = true }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation(.easeInOut(duration: 0.1)) { isPressed = false }
+                            click()
+                        }
+                    }
+                }
+
+            VStack(alignment: .leading, spacing: 12) {
+                content
+            }
+            .padding(20)
+        }
+        .offset(x: transX, y: transY)
+    }
+}
+
+// MARK: - Neo-Brutalist Search Field Component
+struct NeoTextField: View {
+    let placeholder: String
+    @Binding var text: String
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.black)
+                .offset(x: 4, y: 4)
+
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.black)
+
+                TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.gray))
+                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    .foregroundColor(.black)
+
+                if !text.isEmpty {
+                    Button {
+                        text = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.black)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.black, lineWidth: 3)
+            )
+        }
+    }
+}
 
 // MARK: - Models
 struct FAQItem: Codable, Identifiable, Hashable {
     let id = UUID()
     let question: String
     let answer: String
-
-    enum CodingKeys: String, CodingKey {
-        case question, answer
-    }
+    enum CodingKeys: String, CodingKey { case question, answer }
 }
 
 struct SponsorLink: Codable, Hashable { let label: String; let url: String }
-struct SponsorItem: Codable, Identifiable, Hashable { let id = UUID(); let name: String; let level: String; let description: String; let website: String?; let links: [SponsorLink]? }
-struct VendorItem: Codable, Identifiable, Hashable { let id = UUID(); let name: String; let category: String; let description: String; let email: String?; let phone: String?; let website: String?; let mapId: String? }
+struct SponsorItem: Codable, Identifiable, Hashable {
+    let id = UUID()
+    let name: String
+    let level: String
+    let description: String
+    let about: String?
+    let website: String?
+    let links: [SponsorLink]?
+    let email: String?
+    let phone: String?
+    let background: String?
+}
+
+struct VendorItem: Codable, Identifiable, Hashable {
+    let id = UUID()
+    let name: String
+    let category: String
+    let description: String
+    let about: String?
+    let email: String?
+    let phone: String?
+    let website: String?
+    let mapId: String?
+    let background: String?
+}
+
 struct ScheduleItem: Codable, Identifiable, Hashable { let id = UUID(); let time: String; let event: String }
 struct HotelItem: Codable, Identifiable, Hashable { let id = UUID(); let name: String; let link: String }
 struct GeneralInfo: Codable, Hashable { let parking: String; let rules: String; let hotels: [HotelItem] }
+
+struct EntertainmentItem: Codable, Identifiable, Hashable {
+    let id = UUID()
+    let name: String
+    let role: String
+    let category: String?
+    let description: String?
+    let about: String?
+    let socialPlatform: String?
+    let socialHandle: String?
+    let socialUrl: String?
+    let contactInfo: String?
+}
 
 struct EventData: Codable, Hashable {
     let sponsors: [SponsorItem]
@@ -28,6 +156,8 @@ struct EventData: Codable, Hashable {
     let schedule: [ScheduleItem]
     let info: GeneralInfo
     let faq: [FAQItem]?
+    let groundEntertainment: [EntertainmentItem]?
+    let performers: [EntertainmentItem]?
 }
 
 // MARK: - Data Loader
@@ -36,8 +166,7 @@ enum DataLoader {
         guard let url = Bundle.main.url(forResource: "event_data", withExtension: "json") else { return nil }
         do {
             let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            return try decoder.decode(EventData.self, from: data)
+            return try JSONDecoder().decode(EventData.self, from: data)
         } catch {
             print("Error loading event_data.json: \(error)")
             return nil
@@ -45,7 +174,7 @@ enum DataLoader {
     }
 }
 
-// MARK: - Favorites Store (UserDefaults)
+// MARK: - Favorites Store
 final class FavoritesStore: ObservableObject {
     @Published var ids: Set<String>
     private let key = "favorite_ids"
@@ -63,936 +192,388 @@ final class FavoritesStore: ObservableObject {
         if current.contains(id) { current.remove(id) } else { current.insert(id) }
         ids = current
         UserDefaults.standard.set(Array(current), forKey: key)
-        Analytics.logEvent("vendor_favorite_toggle", parameters: ["name": id, "is_favorite": ids.contains(id)])
+        
+        Analytics.logEvent("vendor_favorite_toggle", parameters: [
+            "vendor_name": id as NSObject,
+            "is_favorite": ids.contains(id) as NSObject
+        ])
     }
 }
 
-// MARK: - Theme
-extension Color {
-    static let deepNavy = Color(red: 0.039, green: 0.098, blue: 0.184)      // 0x0A192F
-    static let primaryNavy = Color(red: 0.066, green: 0.133, blue: 0.251)   // 0x112240
-    static let secondarySlate = Color(red: 0.533, green: 0.572, blue: 0.690)// 0x8892B0
-    static let aestheticGold = Color(red: 0.969, green: 0.816, blue: 0.541) // 0xF7D08A
-}
-
-struct NavyTheme: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .tint(Color.aestheticGold)
-            .background(Color.deepNavy)
-            .environment(\.colorScheme, .dark)
-            .fontDesign(.rounded)
-    }
-}
-
-// MARK: - Reusable Custom Header Component
-struct ScreenHeaderView: View {
-    let title: String
-    var showAppIcon: Bool = false
-
-    var body: some View {
-        HStack(spacing: 12) {
-            if showAppIcon {
-                if let appIcon = UIImage(named: "AppIcon") ?? UIImage(named: "AppIcon60x60") {
-                    Image(uiImage: appIcon)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 36, height: 36)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.aestheticGold, lineWidth: 2))
-                } else {
-                    Image(systemName: "airplane.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 36, height: 36)
-                        .foregroundStyle(Color.aestheticGold)
-                }
-            }
-
-            Text(title)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .foregroundStyle(.white)
-
-            Spacer()
-        }
-        .padding(.top, 8)
-        .padding(.bottom, 4)
-        .background(Color.deepNavy)
-    }
-}
-
-// MARK: - Multi-Selection Filter Sheet
-struct FilterSelectionSheet: View {
-    let title: String
-    let options: [String]
-    @Binding var selectedOptions: Set<String>
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                List {
-                    Section {
-                        ForEach(options, id: \.self) { option in
-                            Button {
-                                toggle(option)
-                            } label: {
-                                HStack {
-                                    Text(option)
-                                        .fontWeight(.medium)
-                                        .foregroundStyle(.white)
-                                    Spacer()
-                                    Image(systemName: selectedOptions.contains(option) ? "checkmark.circle.fill" : "circle")
-                                        .font(.title3)
-                                        .foregroundStyle(selectedOptions.contains(option) ? Color.aestheticGold : Color.secondarySlate)
-                                }
-                                .padding(.vertical, 4)
-                            }
-                            .buttonStyle(.plain)
-                            .listRowBackground(Color.primaryNavy)
-                        }
-                    } header: {
-                        Text("Select categories to display")
-                            .foregroundStyle(Color.secondarySlate)
-                    }
-                }
-                .scrollContentBackground(.hidden)
-                .background(Color.deepNavy)
-            }
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .fontWeight(.bold)
-                    .foregroundStyle(Color.aestheticGold)
-                }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Select All") {
-                        selectedOptions = Set(options)
-                    }
-                    .foregroundStyle(Color.secondarySlate)
-                }
-            }
-        }
-        .modifier(NavyTheme())
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
-    }
-
-    private func toggle(_ option: String) {
-        if selectedOptions.contains(option) {
-            selectedOptions.remove(option)
-        } else {
-            selectedOptions.insert(option)
-        }
-    }
-}
-
-// MARK: - App Shell
+// MARK: - Root Scaffold Shell (Matching Android MainScreen Scaffold)
 struct ContentView: View {
-    init() {
-        UINavigationBar.appearance().standardAppearance = UINavigationBarAppearance()
-        UINavigationBar.appearance().scrollEdgeAppearance = UINavigationBarAppearance()
-        UITabBar.appearance().standardAppearance = UITabBarAppearance()
-        UITabBar.appearance().scrollEdgeAppearance = UITabBarAppearance()
-    }
-
     @State private var eventData: EventData? = DataLoader.loadEventData()
     @StateObject private var favorites = FavoritesStore()
-
-    var body: some View {
-        TabView {
-            NavigationStack { HomeView(eventData: eventData).onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "home"]) } }
-                .tabItem { Label("Home", systemImage: "house.fill") }
-
-            NavigationStack { SponsorsView(eventData: eventData).onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "sponsors"]) } }
-                .tabItem { Label("Sponsors", systemImage: "star.fill") }
-
-            NavigationStack { EntertainmentView(eventData: eventData).onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "events"]) } }
-                .tabItem { Label("Events", systemImage: "list.bullet.rectangle.fill") }
-
-            NavigationStack { VendorsView(eventData: eventData, favorites: favorites).onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "vendors"]) } }
-                .tabItem { Label("Vendors", systemImage: "cart.fill") }
-        }
-        .modifier(NavyTheme())
-    }
-}
-
-// MARK: - Clickable Answer Helper View
-struct ClickableTextView: View {
-    let text: String
-    @Environment(\.openURL) private var openURL
-
-    var body: some View {
-        let words = text.split(separator: " ")
-        
-        words.reduce(Text("")) { partial, wordStr in
-            let word = String(wordStr)
-            if word.hasPrefix("http://") || word.hasPrefix("https://") {
-                if let url = URL(string: word) {
-                    return partial + Text(" ") + Text(word).foregroundColor(Color.aestheticGold).underline()
-                }
-            } else if word.contains("@") && word.contains(".") {
-                if let url = URL(string: "mailto:\(word)") {
-                    return partial + Text(" ") + Text(word).foregroundColor(Color.aestheticGold).underline()
-                }
-            }
-            return partial + (partial == Text("") ? Text("") : Text(" ")) + Text(word)
-        }
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
-        .environment(\.openURL, OpenURLAction { url in
-            openURL(url)
-            return .handled
-        })
-    }
-}
-
-// MARK: - Home View
-struct HomeView: View {
-    let eventData: EventData?
-    @Environment(\.openURL) private var openURL
-    @State private var isDescriptionExpanded: Bool = false
+    @State private var currentTab = 0
 
     var body: some View {
         VStack(spacing: 0) {
-            ScreenHeaderView(title: "Home", showAppIcon: true)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+            // Compact Neo-Brutalist Top Bar
+            VStack(spacing: 0) {
+                ZStack {
+                    Color.white
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    // Welcome Card with Expandable Text
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Welcome to the Show")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundStyle(Color.aestheticGold)
-                        
-                        Text("Welcome to Hops in the Hangar, your Craft Beer & Airshow event app! Explore a lineup of vendors and sponsors, discover detailed venue information, find the best hotels nearby, enjoy exciting entertainment, and get to know the featured airshow performers.")
-                            .foregroundStyle(.secondary)
-                        
-                        if isDescriptionExpanded {
-                            Text("Craft beer, beverages, and aircraft come together to create not only a fun social event, but also an extremely unique community experience. Hops in the Hangar celebrates aviation, local businesses, and great craft beverages while bringing people together for an unforgettable evening at the Middletown Regional Airport.")
-                                .foregroundStyle(.secondary)
-                            
-                            Text("Whether you're here for the thrilling air show performances, the incredible selection of breweries and beverage vendors, or simply to enjoy time with friends and family, this app will help you make the most of your experience. Stay connected with schedules, updates, event maps, and everything you need for an amazing experience at Hops in the Hangar 2026.")
-                                .foregroundStyle(.secondary)
-                        }
-                        
+                    HStack(spacing: 12) {
+                        Text(tabTitle(for: currentTab))
+                            .font(.system(size: 16, weight: .black))
+                            .tracking(1)
+                            .foregroundStyle(.black)
+
+                        Spacer()
+
                         Button {
-                            withAnimation {
-                                isDescriptionExpanded.toggle()
+                            Analytics.logEvent("get_tickets_tap", parameters: nil)
+                            if let url = URL(string: "https://middletownaviationfoundation.ticketspice.com/hops-in-the-hangar-2026") {
+                                UIApplication.shared.open(url)
                             }
                         } label: {
                             HStack(spacing: 4) {
-                                Text(isDescriptionExpanded ? "Show Less" : "Read More")
-                                    .fontWeight(.semibold)
-                                Image(systemName: isDescriptionExpanded ? "chevron.up" : "chevron.down")
+                                Image(systemName: "ticket.fill")
+                                    .font(.system(size: 10, weight: .black))
+                                Text("TICKETS")
+                                    .font(.system(size: 10, weight: .black))
                             }
-                            .font(.subheadline)
-                            .foregroundStyle(Color.aestheticGold)
-                        }
-                        .padding(.top, 4)
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
-
-                    // Hops 2026 Recap Card
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Hops 2026 Recap")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundStyle(Color.aestheticGold)
-                        
-                        Text("As featured on WLWT, Hops in the Hangar 2026 was a stellar celebration of craft beer and aviation. Saturday, August 22nd at the Middletown Regional Airport proved to be a perfect backdrop for a fun night where specialty beer enthusiasts and plane lovers combined their passions into one unforgettable experience.")
-                            .foregroundStyle(.secondary)
-
-                        HStack(spacing: 4) {
-                            Text("Watch the full news segment")
-                                .foregroundStyle(.secondary)
-                            Button("here") {
-                                if let url = URL(string: "https://www.wlwt.com/article/annual-hops-in-the-hangar-fundraiser-middletown-regional-airport/73466732?utm_campaign=snd-autopilot&fbclid=IwY2xjawUANr9wZG9mBWV4dG4DYWVtAjEwAGJyaWQRMVlwcXpNeXpWYUNFWWhGR29zcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEe-doI-qUEQTUaFejKpMXCGEVudnU0I_GSflwfU8n9y6sPHQnYEw02Nxthr-I_aem_yoV-Z7vcQlzoQCkJhKZvYQ") {
-                                    openURL(url)
-                                }
-                            }
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(Color.aestheticGold)
-                            .underline()
-                            .buttonStyle(.plain)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .background(Color.neoPink)
+                            .foregroundStyle(.black)
+                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                            .shadow(color: .black, radius: 0, x: 2, y: 2)
                         }
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                }
+                .frame(height: 50)
+                
+                Rectangle()
+                    .fill(Color.black)
+                    .frame(height: 3)
+            }
+            .background(Color.white)
+            .zIndex(1)
 
-                    // FAQ Section
-                    if let faqs = eventData?.faq, !faqs.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Frequently Asked Questions")
-                                .font(.headline)
-                                .foregroundStyle(Color.aestheticGold)
-                        
-                            ForEach(faqs) { item in
-                                DisclosureGroup {
-                                    ClickableTextView(text: item.answer)
-                                        .padding(.vertical, 6)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                } label: {
-                                    Text(item.question)
-                                        .font(.body)
-                                        .fontWeight(.medium)
-                                        .foregroundStyle(.white)
-                                        .multilineTextAlignment(.leading)
-                                }
-                                .tint(Color.aestheticGold)
-                                .padding()
-                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.06)))
-                            }
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
-                    }
+            // Dynamic Screen Content Host
+            Group {
+                switch currentTab {
+                case 0:
+                    HomeScreen(eventData: eventData)
+                        .onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "home"]) }
+                case 1:
+                    SponsorsScreen(eventData: eventData)
+                        .onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "sponsors"]) }
+                case 2:
+                    EntertainmentView(eventData: eventData)
+                        .onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "events"]) }
+                case 3:
+                    VendorsScreen(eventData: eventData, favorites: favorites)
+                        .onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "vendors"]) }
+                default:
+                    HomeScreen(eventData: eventData)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.neoBackground)
 
-                    // Venue & Logistics
-                    if let info = eventData?.info {
-                        VStack(alignment: .leading, spacing: 16) {
-                            Group {
-                                Text("Parking").font(.headline).foregroundStyle(Color.aestheticGold)
-                                Text(info.parking).foregroundStyle(.secondary)
-                            }
-                            Group {
-                                Text("Event Rules").font(.headline).foregroundStyle(Color.aestheticGold)
-                                Text(info.rules).foregroundStyle(.secondary)
-                            }
-                            Group {
-                                Text("Nearby Hotels").font(.headline).foregroundStyle(Color.aestheticGold)
-                                ForEach(info.hotels) { hotel in
-                                    Button {
-                                        if let url = URL(string: hotel.link) { openURL(url) }
-                                    } label: {
-                                        HStack {
-                                            Image(systemName: "bed.double.fill")
-                                            Text(hotel.name).fontWeight(.semibold)
-                                            Spacer()
-                                            let phoneString: String = {
-                                                if hotel.link.hasPrefix("tel:") {
-                                                    let raw = hotel.link.replacingOccurrences(of: "tel:", with: "")
-                                                    if raw.count == 10 {
-                                                        let a = raw.prefix(3)
-                                                        let b = raw.dropFirst(3).prefix(3)
-                                                        let c = raw.dropFirst(6)
-                                                        return "(\(a)) \(b)-\(c)"
-                                                    }
-                                                    return raw
-                                                }
-                                                return hotel.link
-                                            }()
-                                            Text(phoneString)
-                                                .font(.subheadline)
-                                                .foregroundStyle(Color.aestheticGold)
-                                            Image(systemName: "chevron.forward").font(.footnote)
-                                        }
-                                        .padding()
-                                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.06)))
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.primaryNavy))
-                    }
+            // Compact Neo-Brutalist Bottom App Bar
+            VStack(spacing: 0) {
+                Rectangle()
+                    .fill(Color.black)
+                    .frame(height: 3)
 
-                    // Persistent Tickets Button
-                    Button {
-                        if let url = URL(string: "https://middletownaviationfoundation.ticketspice.com/hops-in-the-hangar-2026") {
-                            openURL(url)
-                            Analytics.logEvent("get_tickets_tap", parameters: nil)
-                        }
-                    } label: {
-                        HStack {
-                            Image(systemName: "ticket.fill")
-                            Text("Get Tickets").fontWeight(.bold)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.aestheticGold))
-                        .foregroundStyle(Color.deepNavy)
-                    }
+                HStack(spacing: 8) {
+                    BottomNavItem(title: "HOME", icon: "house.fill", color: .neoYellow, index: 0, currentTab: $currentTab)
+                    BottomNavItem(title: "SPONSORS", icon: "star.fill", color: .neoPink, index: 1, currentTab: $currentTab)
+                    BottomNavItem(title: "EVENTS", icon: "list.bullet", color: .neoGreen, index: 2, currentTab: $currentTab)
+                    BottomNavItem(title: "VENDORS", icon: "cart.fill", color: .neoBlue, index: 3, currentTab: $currentTab)
                 }
                 .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+                .padding(.vertical, 8)
+                .background(Color.white)
             }
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .background(Color.deepNavy)
-        .toolbar(.hidden, for: .navigationBar)
+        .ignoresSafeArea(.keyboard)
+        .background(Color.neoBackground)
+        .preferredColorScheme(.light)
+    }
+
+    private func tabTitle(for index: Int) -> String {
+        switch index {
+        case 0: return "HOME"
+        case 1: return "SPONSORS"
+        case 2: return "EVENTS"
+        case 3: return "VENDORS"
+        default: return "HOME"
+        }
     }
 }
 
-// MARK: - Sponsors
-struct SponsorsView: View {
-    let eventData: EventData?
-    @Environment(\.openURL) private var openURL
-    @State private var query = ""
-    @State private var selectedTiers: Set<String> = [
-        "Premier", "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Breweries"
-    ]
-    @State private var sheetSponsor: SponsorItem? = nil
-    @State private var isFilterPresented: Bool = false
+// MARK: - Custom Bottom Nav Tab Item with Tactile Press
+struct BottomNavItem: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let index: Int
+    @Binding var currentTab: Int
 
-    private let allTiers = [
-        "Premier", "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Breweries"
-    ]
+    var isSelected: Bool { currentTab == index }
 
-    let premierItems: [SponsorItem] = [
-        SponsorItem(name: "City of Middletown", level: "Premier", description: "City of Middletown Sponsor", website: nil, links: nil),
-        SponsorItem(name: "MWO", level: "Premier", description: "Middletown Regional Airport Sponsor", website: nil, links: nil),
-        SponsorItem(name: "Start Skydiving", level: "Premier", description: "Start Skydiving Sponsor", website: nil, links: nil),
-        SponsorItem(name: "Team Fastrax", level: "Premier", description: "Team Fastrax Sponsor", website: nil, links: nil)
-    ]
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color.black)
+                .offset(x: isSelected ? 1 : 2, y: isSelected ? 1 : 2)
 
-    var baseSponsors: [SponsorItem] {
-        let raw = eventData?.sponsors ?? []
-        let excludedNames = ["City of Middletown", "MWO", "Start Skydiving", "Team Fastrax", "City of Middletown & MWO", "Start Skydiving & Team Fastrax"]
-        return raw.filter { sponsor in
-            !excludedNames.contains { sponsor.name.localizedCaseInsensitiveContains($0) }
-        }
-    }
-    
-    var filteredPremier: [SponsorItem] {
-        premierItems.filter { sponsor in
-            let matchesQuery = query.isEmpty || sponsor.name.localizedCaseInsensitiveContains(query)
-            let matchesTier = selectedTiers.contains("Premier")
-            return matchesQuery && matchesTier
-        }
-    }
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isSelected ? color : Color.neoWhite)
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    currentTab = index
+                }
 
-    var filteredBase: [SponsorItem] {
-        baseSponsors.filter { sponsor in
-            let matchesQuery = query.isEmpty ||
-                sponsor.name.localizedCaseInsensitiveContains(query) ||
-                sponsor.level.localizedCaseInsensitiveContains(query)
-            
-            let matchesTier = selectedTiers.contains { tier in
-                tier != "Premier" && sponsor.level.localizedCaseInsensitiveContains(tier)
+            VStack(spacing: 2) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .bold))
+                Text(title)
+                    .font(.system(size: 8, weight: .black))
             }
-            
-            return matchesQuery && matchesTier
+            .foregroundColor(.black)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 6)
+        }
+        .frame(maxWidth: .infinity)
+        .offset(x: isSelected ? 1 : 0, y: isSelected ? 1 : 0)
+    }
+}
+
+// MARK: - Home Screen
+struct HomeScreen: View {
+    let eventData: EventData?
+    @State private var isWelcomeExpanded = false
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                NeoCard(backgroundColor: .neoWhite) {
+                    Button {
+                        withAnimation { isWelcomeExpanded.toggle() }
+                    } label: {
+                        HStack {
+                            Text("WELCOME TO THE SHOW")
+                                .font(.headline)
+                                .fontWeight(.black)
+                                .foregroundStyle(.black)
+                            Spacer()
+                            Text(isWelcomeExpanded ? "[-] " : "[+] ")
+                                .fontWeight(.black)
+                                .foregroundStyle(.black)
+                                .padding(4)
+                                .background(Color.neoYellow)
+                                .border(Color.black, width: 2)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    Text("Welcome to Hops in the Hangar, your Craft Beer & Airshow event app! Explore a lineup of vendors and sponsors, discover detailed venue information, and enjoy exciting entertainment.")
+                        .font(.body)
+                        .foregroundStyle(.black.opacity(0.8))
+
+                    if isWelcomeExpanded {
+                        Text("Craft beer, beverages, and aircraft come together to create not only a fun social event, but also an extremely unique community experience at the Middletown Regional Airport.")
+                            .font(.body)
+                            .foregroundStyle(.black.opacity(0.8))
+                    }
+                }
+
+                NeoCard(backgroundColor: .neoPink) {
+                    Text("Hops 2026 Recap")
+                        .font(.headline)
+                        .fontWeight(.black)
+                        .foregroundStyle(.black)
+
+                    Text("As featured on WLWT, Hops in the Hangar 2026 was a stellar celebration of craft beer and aviation.")
+                        .font(.body)
+                        .foregroundStyle(.black.opacity(0.8))
+
+                    if let url = URL(string: "https://www.wlwt.com/article/annual-hops-in-the-hangar-fundraiser-middletown-regional-airport/73466732") {
+                        Link("Watch the full news segment here.", destination: url)
+                            .font(.subheadline)
+                            .fontWeight(.black)
+                            .underline()
+                            .foregroundStyle(.blue)
+                    }
+                }
+
+                if let info = eventData?.info {
+                    NeoCard(backgroundColor: .neoBlue) {
+                        Text("VENUE & LOGISTICS")
+                            .font(.headline)
+                            .fontWeight(.black)
+
+                        Text("Parking").fontWeight(.black)
+                        Text(info.parking).font(.subheadline).foregroundStyle(.black.opacity(0.8))
+
+                        Divider().overlay(.black)
+
+                        Text("Event Rules").fontWeight(.black)
+                        Text(info.rules).font(.subheadline).foregroundStyle(.black.opacity(0.8))
+                    }
+                }
+            }
+            .padding(16)
+        }
+    }
+}
+
+// MARK: - Sponsors Screen
+struct SponsorsScreen: View {
+    let eventData: EventData?
+    @State private var query = ""
+    @State private var selectedTiers: Set<String> = ["Premier", "Top Flight", "First Class", "Business Class", "Coach Class", "Passport"]
+
+    var sponsors: [SponsorItem] { eventData?.sponsors ?? [] }
+    var filtered: [SponsorItem] {
+        sponsors.filter {
+            (query.isEmpty || $0.name.localizedCaseInsensitiveContains(query)) && selectedTiers.contains($0.level)
         }
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScreenHeaderView(title: "Sponsors", showAppIcon: false)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+        ScrollView {
+            VStack(spacing: 16) {
+                NeoTextField(placeholder: "SEARCH SPONSORS...", text: $query)
+                    .padding(.bottom, 8)
 
-            // Search Bar + Filter Trigger Button
-            HStack(spacing: 8) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
-                    TextField("Search Sponsors", text: $query)
-                        .foregroundStyle(.white)
-                    if !query.isEmpty {
-                        Button {
-                            query = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .padding(10)
-                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
+                ForEach(filtered) { sponsor in
+                    NeoCard(backgroundColor: .neoWhite) {
+                        Text(sponsor.level.uppercased())
+                            .font(.system(size: 10, weight: .black))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.neoYellow)
+                            .border(Color.black, width: 1.5)
 
-                Button {
-                    isFilterPresented = true
-                } label: {
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(Color.aestheticGold)
-                        
-                        if selectedTiers.count < allTiers.count {
-                            Circle()
-                                .fill(Color.pink)
-                                .frame(width: 8, height: 8)
-                                .offset(x: 2, y: -2)
-                        }
-                    }
-                    .padding(.trailing, 4)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
-
-            // Sponsor List
-            List {
-                if !filteredPremier.isEmpty {
-                    Section {
-                        ForEach(filteredPremier) { sponsor in
-                            Button {
-                                Analytics.logEvent("sponsor_open", parameters: ["name": sponsor.name])
-                                let urlString = sponsor.links?.first?.url ?? sponsor.website
-                                if let u = urlString, let url = URL(string: u) { openURL(url) }
-                            } label: {
-                                HStack(alignment: .center, spacing: 12) {
-                                    ZStack {
-                                        Circle().stroke(Color.aestheticGold.opacity(0.6), lineWidth: 2).frame(width: 40, height: 40)
-                                        let asset = assetName(from: sponsor.name)
-                                        if UIImage(named: asset) != nil {
-                                            Image(asset)
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 36, height: 36)
-                                                .clipShape(Circle())
-                                        } else {
-                                            Image(systemName: "star.fill")
-                                                .foregroundStyle(Color.aestheticGold)
-                                        }
-                                    }
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(sponsor.name).fontWeight(.semibold).foregroundStyle(.white)
-                                        Text(sponsor.description).foregroundStyle(Color.aestheticGold.opacity(0.8)).font(.subheadline).lineLimit(2)
-                                        Text(sponsor.level).font(.caption2).foregroundStyle(Color.aestheticGold)
-                                    }
-                                    Spacer()
-                                }
-                                .padding(8)
-                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.aestheticGold.opacity(0.15)))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    } header: {
-                        Text("Premier Sponsors")
+                        Text(sponsor.name)
                             .font(.headline)
-                            .foregroundStyle(Color.aestheticGold)
-                    }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
-                }
+                            .fontWeight(.black)
+                            .foregroundStyle(.black)
 
-                if !filteredBase.isEmpty {
-                    Section {
-                        ForEach(filteredBase) { sponsor in
-                            Button {
-                                Analytics.logEvent("sponsor_open", parameters: ["name": sponsor.name])
-                                if let links = sponsor.links, links.count > 1 {
-                                    sheetSponsor = sponsor
-                                } else {
-                                    let urlString = sponsor.links?.first?.url ?? sponsor.website
-                                    if let u = urlString, let url = URL(string: u) { openURL(url) }
-                                }
-                            } label: {
-                                HStack(alignment: .center, spacing: 12) {
-                                    ZStack {
-                                        Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 40, height: 40)
-                                        let asset = assetName(from: sponsor.name)
-                                        if UIImage(named: asset) != nil {
-                                            Image(asset)
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 36, height: 36)
-                                                .clipShape(Circle())
-                                        } else {
-                                            Image(systemName: "star.fill")
-                                                .foregroundStyle(Color.aestheticGold)
-                                        }
-                                    }
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(sponsor.name).fontWeight(.semibold)
-                                        Text(sponsor.description).foregroundStyle(.secondary).font(.subheadline).lineLimit(2)
-                                        Text(sponsor.level).font(.caption2).foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                }
-                                .padding(8)
-                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    } header: {
-                        if !filteredPremier.isEmpty {
-                            Text("All Sponsors")
-                                .font(.headline)
-                                .foregroundStyle(Color.aestheticGold)
-                        }
+                        Text(sponsor.description)
+                            .font(.subheadline)
+                            .foregroundStyle(.black.opacity(0.8))
                     }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
-                }
-            }
-            .scrollContentBackground(.hidden)
-            .listStyle(.plain)
-        }
-        .background(Color.deepNavy)
-        .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $isFilterPresented) {
-            FilterSelectionSheet(
-                title: "Filter Sponsors",
-                options: allTiers,
-                selectedOptions: $selectedTiers
-            )
-        }
-        .sheet(item: $sheetSponsor) { sponsor in
-            NavigationStack {
-                List {
-                    Section {
-                        ForEach(sponsor.links ?? [], id: \.self) { link in
-                            Button {
-                                Analytics.logEvent("sponsor_open", parameters: ["name": sponsor.name])
-                                if let url = URL(string: link.url) { openURL(url) }
-                            } label: {
-                                HStack {
-                                    Text(link.label)
-                                        .fontWeight(.medium)
-                                        .foregroundStyle(.white)
-                                    Spacer()
-                                    Image(systemName: "arrow.up.right.square")
-                                        .foregroundStyle(Color.aestheticGold)
-                                }
-                                .padding(12)
-                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
-                            }
-                            .buttonStyle(.plain)
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
+                    .onTapGesture {
+                        Analytics.logEvent("sponsor_open", parameters: ["sponsor_name": sponsor.name])
+                        if let website = sponsor.website, let url = URL(string: website) {
+                            UIApplication.shared.open(url)
                         }
-                    } header: {
-                        Text("Open Website")
-                            .foregroundStyle(Color.aestheticGold)
-                    }
-                }
-                .scrollContentBackground(.hidden)
-                .background(Color.deepNavy)
-                .listStyle(.plain)
-                .navigationTitle(sponsor.name)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Done") { sheetSponsor = nil }
-                            .foregroundStyle(Color.aestheticGold)
                     }
                 }
             }
-            .modifier(NavyTheme())
-            .presentationDetents([.medium, .large])
+            .padding(16)
         }
-    }
-
-    private func assetName(from name: String) -> String {
-        let lower = name.lowercased()
-        if lower.contains("mwo") || lower.contains("middletown regional airport") {
-            return "mwo"
-        }
-        if lower.contains("kara goheen") {
-            return "kara_goheen_friends_and_furball"
-        }
-        if lower.contains("affordable dentures") {
-            return "affordable_dentures_and_implants"
-        }
-        let underscored = lower.replacingOccurrences(of: " & ", with: "_")
-            .replacingOccurrences(of: " ", with: "_")
-        return underscored.replacingOccurrences(of: "[^a-z0-9_]", with: "", options: .regularExpression)
     }
 }
 
-// MARK: - Vendors
-struct VendorsView: View {
+// MARK: - Vendors Screen
+struct VendorsScreen: View {
     let eventData: EventData?
     @ObservedObject var favorites: FavoritesStore
-    @Environment(\.openURL) private var openURL
-
     @State private var query = ""
-    @State private var selected: Set<String> = ["Brewery", "Food Truck"]
-    @State private var isFilterPresented: Bool = false
-
-    private let categories = ["Brewery", "Food Truck"]
+    @State private var selectedCategories: Set<String> = ["Brewery", "Food Truck"]
 
     var vendors: [VendorItem] { eventData?.vendors ?? [] }
     var filtered: [VendorItem] {
-        vendors.filter { v in
-            (query.isEmpty || v.name.localizedCaseInsensitiveContains(query) || v.category.localizedCaseInsensitiveContains(query)) &&
-            selected.contains(v.category)
+        vendors.filter {
+            (query.isEmpty || $0.name.localizedCaseInsensitiveContains(query)) && selectedCategories.contains($0.category)
         }
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScreenHeaderView(title: "Vendors", showAppIcon: false)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+        ScrollView {
+            VStack(spacing: 16) {
+                NeoTextField(placeholder: "SEARCH VENDORS...", text: $query)
+                    .padding(.bottom, 8)
 
-            // Search Bar + Filter Trigger Button
-            HStack(spacing: 8) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
-                    TextField("Search Vendors", text: $query)
-                        .foregroundStyle(.white)
-                    if !query.isEmpty {
-                        Button {
-                            query = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .padding(10)
-                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
+                ForEach(filtered) { vendor in
+                    NeoCard(backgroundColor: .neoWhite) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(vendor.category.uppercased())
+                                    .font(.system(size: 10, weight: .black))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.neoPink)
+                                    .border(Color.black, width: 1.5)
 
-                Button {
-                    isFilterPresented = true
-                } label: {
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(Color.aestheticGold)
-                        
-                        if selected.count < categories.count {
-                            Circle()
-                                .fill(Color.pink)
-                                .frame(width: 8, height: 8)
-                                .offset(x: 2, y: -2)
-                        }
-                    }
-                    .padding(.trailing, 4)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+                                Text(vendor.name)
+                                    .font(.headline)
+                                    .fontWeight(.black)
+                                    .foregroundStyle(.black)
 
-            // Vendor List
-            List {
-                Section {
-                    ForEach(filtered) { vendor in
-                        HStack(alignment: .center, spacing: 12) {
-                            ZStack {
-                                Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 2).frame(width: 40, height: 40)
-                                let asset = assetName(from: vendor.name)
-                                if UIImage(named: asset) != nil {
-                                    Image(asset)
-                                        .resizable().scaledToFill().frame(width: 36, height: 36).clipShape(Circle())
-                                } else {
-                                    Image(systemName: iconName(for: vendor.category)).foregroundStyle(.secondary)
-                                }
-                            }
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(vendor.name).fontWeight(.semibold)
-                                Text(vendor.description).foregroundStyle(.secondary).font(.subheadline).lineLimit(2)
-                                Text(vendor.category).font(.caption2).foregroundStyle(.secondary)
+                                Text(vendor.description)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.black.opacity(0.8))
                             }
                             Spacer()
+
                             Button {
                                 favorites.toggle(vendor.name)
                             } label: {
                                 Image(systemName: favorites.ids.contains(vendor.name) ? "heart.fill" : "heart")
-                                    .foregroundStyle(favorites.ids.contains(vendor.name) ? Color.pink : Color.secondary)
+                                    .font(.title3)
+                                    .foregroundStyle(.black)
+                                    .padding(8)
+                                    .background(favorites.ids.contains(vendor.name) ? Color.neoPink : Color.white)
+                                    .border(Color.black, width: 2)
                             }
-                            .buttonStyle(.plain)
                         }
-                        .padding(8)
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
                     }
                 }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
             }
-            .scrollContentBackground(.hidden)
-            .listStyle(.plain)
+            .padding(16)
         }
-        .background(Color.deepNavy)
-        .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $isFilterPresented) {
-            FilterSelectionSheet(
-                title: "Filter Vendors",
-                options: categories,
-                selectedOptions: $selected
-            )
-        }
-    }
-
-    private func iconName(for category: String) -> String {
-        if category.localizedCaseInsensitiveContains("Food") { return "fork.knife" }
-        if category.localizedCaseInsensitiveContains("Brewery") { return "wineglass" }
-        if category.localizedCaseInsensitiveContains("Spirits") { return "wineglass" }
-        return "cart"
-    }
-    private func assetName(from name: String) -> String {
-        let lower = name.lowercased()
-        let underscored = lower.replacingOccurrences(of: " ", with: "_")
-        return underscored.replacingOccurrences(of: "[^a-z0-9_]", with: "", options: .regularExpression)
     }
 }
 
-// MARK: - Entertainment
+// MARK: - Entertainment Screen
 struct EntertainmentView: View {
     let eventData: EventData?
-    var schedule: [ScheduleItem] { eventData?.schedule ?? [] }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScreenHeaderView(title: "Events", showAppIcon: false)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("GROUND ENTERTAINMENT")
+                    .font(.headline)
+                    .fontWeight(.black)
 
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 6) {
-                    // MARK: Ground Entertainment
-                    SectionTitleHeader(title: "Ground Entertainment", isFirst: true)
-                    
-                    EntertainmentRow(
-                        title: "DJ Ron Perry — Live Music DJ",
-                        subtitle: "Live Performance",
-                        icon: "music.note"
-                    )
-                    EntertainmentRow(
-                        title: "Jennifer Kauffman — National Anthem",
-                        subtitle: "Special Vocalist",
-                        icon: "person.wave.2.fill"
-                    )
-                    EntertainmentRow(
-                        title: "Steel Drum Dave — Check In Entertainment",
-                        subtitle: "Live Performance",
-                        icon: "music.note"
-                    )
-
-                    // MARK: In Flight Performers
-                    SectionTitleHeader(title: "In Flight Performers")
-                    
-                    EntertainmentRow(
-                        title: "Wild Bill (Steve Henshew)",
-                        subtitle: "Announcer",
-                        icon: "mic.fill"
-                    )
-                    EntertainmentRow(
-                        title: "Team Fastrax (Nicole Condrey)",
-                        subtitle: "Flag Jump",
-                        icon: "airplane"
-                    )
-                    EntertainmentRow(
-                        title: "Nick Coleman",
-                        subtitle: "Aerobatic Performance",
-                        icon: "airplane"
-                    )
-                    EntertainmentRow(
-                        title: "Bob Richards",
-                        subtitle: "Aerobatic Performance",
-                        icon: "airplane"
-                    )
-                    EntertainmentRow(
-                        title: "Smoke on Aviation Team",
-                        subtitle: "8 Pilot Formation Team",
-                        icon: "airplane"
-                    )
-                    EntertainmentRow(
-                        title: "Mike Hartman",
-                        subtitle: "Aerobatic Performance",
-                        icon: "airplane"
-                    )
-                    EntertainmentRow(
-                        title: "Emerson Stewart III",
-                        subtitle: "Aerobatic Performance",
-                        icon: "airplane"
-                    )
-                    EntertainmentRow(
-                        title: "Rob LeCerda",
-                        subtitle: "Aerobatic Performance",
-                        icon: "airplane"
-                    )
-
-                    // MARK: Event Schedule Timeline
-                    SectionTitleHeader(title: "Event Schedule")
-                    
-                    ForEach(schedule, id: \.id) { item in
-                        HStack(alignment: .center, spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .stroke(Color.secondary.opacity(0.4), lineWidth: 2)
-                                    .frame(width: 40, height: 40)
-                                Image(systemName: "calendar")
-                                    .foregroundStyle(Color.aestheticGold)
-                            }
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(item.event)
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(.white)
-                                Text(item.time)
-                                    .font(.subheadline)
-                                    .foregroundStyle(Color.gray)
-                            }
-                            Spacer()
+                if let ground = eventData?.groundEntertainment {
+                    ForEach(ground) { item in
+                        NeoCard(backgroundColor: .neoWhite) {
+                            Text(item.name).fontWeight(.black)
+                            Text(item.role).font(.subheadline).foregroundStyle(.black.opacity(0.7))
                         }
-                        .padding(8)
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+
+                Text("EVENT SCHEDULE")
+                    .font(.headline)
+                    .fontWeight(.black)
+                    .padding(.top, 10)
+
+                if let schedule = eventData?.schedule {
+                    ForEach(schedule) { item in
+                        NeoCard(backgroundColor: .neoGreen) {
+                            Text(item.event).fontWeight(.black)
+                            Text(item.time).font(.subheadline).fontWeight(.bold)
+                        }
+                    }
+                }
             }
+            .padding(16)
         }
-        .background(Color.deepNavy)
-        .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
-// MARK: - Supporting Subviews for Events Layout
-private struct SectionTitleHeader: View {
-    let title: String
-    var isFirst: Bool = false
-
-    var body: some View {
-        Text(title)
-            .font(.headline)
-            .fontWeight(.bold)
-            .foregroundStyle(Color.aestheticGold)
-            .padding(.top, isFirst ? 0 : 12)
-            .padding(.bottom, 2)
-    }
-}
-
-private struct EntertainmentRow: View {
-    let title: String
-    let subtitle: String
-    let icon: String
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            ZStack {
-                Circle()
-                    .stroke(Color.secondary.opacity(0.4), lineWidth: 2)
-                    .frame(width: 40, height: 40)
-                Image(systemName: icon)
-                    .foregroundStyle(Color.aestheticGold)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-        }
-        .padding(8)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.primaryNavy))
     }
 }
 
