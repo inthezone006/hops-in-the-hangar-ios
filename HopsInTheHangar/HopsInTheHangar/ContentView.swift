@@ -13,6 +13,20 @@ extension Color {
     static let neoBackground = Color(red: 0.96, green: 0.96, blue: 0.96)
 }
 
+// MARK: - Helper to Generate Asset Names (Android Parity)
+func getResourceName(_ name: String?) -> String {
+    guard let name = name else { return "" }
+    if name.localizedStandardContains("Mama Bear") && name.localizedStandardContains("Mac") {
+        return "mamabears_mac"
+    }
+    return name.lowercased()
+        .replacingOccurrences(of: "&", with: " and ")
+        .replacingOccurrences(of: " ", with: "_")
+        .replacingOccurrences(of: "[^a-z0-9_]", with: "", options: .regularExpression)
+        .replacingOccurrences(of: "__+", with: "_", options: .regularExpression)
+        .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+}
+
 // MARK: - Reusable Neo Card Component
 struct NeoCard<Content: View>: View {
     var backgroundColor: Color = .white
@@ -200,7 +214,7 @@ final class FavoritesStore: ObservableObject {
     }
 }
 
-// MARK: - Root Scaffold Shell (Matching Android MainScreen Scaffold)
+// MARK: - Root Scaffold Shell
 struct ContentView: View {
     @State private var eventData: EventData? = DataLoader.loadEventData()
     @StateObject private var favorites = FavoritesStore()
@@ -208,19 +222,18 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Compact Neo-Brutalist Top Bar
+            // Top Bar
             VStack(spacing: 0) {
                 ZStack {
-                    Color.white
+                    Color.neoYellow
 
-                    HStack(spacing: 12) {
-                        Text(tabTitle(for: currentTab))
-                            .font(.system(size: 16, weight: .black))
-                            .tracking(1)
-                            .foregroundStyle(.black)
+                    Text(tabTitle(for: currentTab))
+                        .font(.system(size: 16, weight: .black))
+                        .tracking(1)
+                        .foregroundStyle(.black)
 
+                    HStack {
                         Spacer()
-
                         Button {
                             Analytics.logEvent("get_tickets_tap", parameters: nil)
                             if let url = URL(string: "https://middletownaviationfoundation.ticketspice.com/hops-in-the-hangar-2026") {
@@ -235,14 +248,13 @@ struct ContentView: View {
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 6)
-                            .background(Color.neoPink)
+                            .background(Color.neoWhite)
                             .foregroundStyle(.black)
                             .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                             .shadow(color: .black, radius: 0, x: 2, y: 2)
                         }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
                 }
                 .frame(height: 50)
                 
@@ -250,10 +262,10 @@ struct ContentView: View {
                     .fill(Color.black)
                     .frame(height: 3)
             }
-            .background(Color.white)
+            .background(Color.neoYellow)
             .zIndex(1)
 
-            // Dynamic Screen Content Host
+            // Content Host
             Group {
                 switch currentTab {
                 case 0:
@@ -275,7 +287,7 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.neoBackground)
 
-            // Compact Neo-Brutalist Bottom App Bar
+            // Bottom App Bar
             VStack(spacing: 0) {
                 Rectangle()
                     .fill(Color.black)
@@ -309,7 +321,7 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Custom Bottom Nav Tab Item with Tactile Press
+// MARK: - Custom Bottom Nav Tab Item
 struct BottomNavItem: View {
     let title: String
     let icon: String
@@ -431,7 +443,8 @@ struct HomeScreen: View {
 struct SponsorsScreen: View {
     let eventData: EventData?
     @State private var query = ""
-    @State private var selectedTiers: Set<String> = ["Premier", "Top Flight", "First Class", "Business Class", "Coach Class", "Passport"]
+    @State private var selectedTiers: Set<String> = ["Premier", "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Brewery"]
+    @State private var selectedSponsor: SponsorItem? = nil
 
     var sponsors: [SponsorItem] { eventData?.sponsors ?? [] }
     var filtered: [SponsorItem] {
@@ -441,13 +454,90 @@ struct SponsorsScreen: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                NeoTextField(placeholder: "SEARCH SPONSORS...", text: $query)
-                    .padding(.bottom, 8)
+        ZStack {
+            ScrollView {
+                VStack(spacing: 16) {
+                    NeoTextField(placeholder: "SEARCH SPONSORS...", text: $query)
+                        .padding(.bottom, 8)
 
-                ForEach(filtered) { sponsor in
-                    NeoCard(backgroundColor: .neoWhite) {
+                    ForEach(filtered) { sponsor in
+                        NeoCard(backgroundColor: .neoWhite) {
+                            HStack(alignment: .center, spacing: 14) {
+                                // Logo Asset Thumbnail
+                                let resName = getResourceName(sponsor.name)
+                                if let uiImage = UIImage(named: resName) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 50, height: 50)
+                                        .background(Color.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                                } else {
+                                    Image(systemName: "star.fill")
+                                        .font(.system(size: 20))
+                                        .frame(width: 50, height: 50)
+                                        .background(Color.neoYellow)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                                }
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(sponsor.level.uppercased())
+                                        .font(.system(size: 9, weight: .black))
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.neoYellow)
+                                        .border(Color.black, width: 1.5)
+
+                                    Text(sponsor.name)
+                                        .font(.headline)
+                                        .fontWeight(.black)
+                                        .foregroundStyle(.black)
+
+                                    Text(sponsor.description)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.black.opacity(0.8))
+                                }
+                                Spacer()
+                            }
+                        }
+                        .onTapGesture {
+                            Analytics.logEvent("sponsor_open", parameters: ["sponsor_name": sponsor.name])
+                            selectedSponsor = sponsor
+                        }
+                    }
+                }
+                .padding(16)
+            }
+        }
+        .sheet(item: $selectedSponsor) { sponsor in
+            SponsorDetailSheet(sponsor: sponsor)
+        }
+    }
+}
+
+// MARK: - Sponsor Detail Sheet
+struct SponsorDetailSheet: View {
+    let sponsor: SponsorItem
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(spacing: 16) {
+                    let resName = getResourceName(sponsor.name)
+                    if let uiImage = UIImage(named: resName) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 64, height: 64)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(sponsor.level.uppercased())
                             .font(.system(size: 10, weight: .black))
                             .padding(.horizontal, 6)
@@ -456,24 +546,95 @@ struct SponsorsScreen: View {
                             .border(Color.black, width: 1.5)
 
                         Text(sponsor.name)
-                            .font(.headline)
+                            .font(.title2)
                             .fontWeight(.black)
                             .foregroundStyle(.black)
-
-                        Text(sponsor.description)
-                            .font(.subheadline)
-                            .foregroundStyle(.black.opacity(0.8))
                     }
-                    .onTapGesture {
-                        Analytics.logEvent("sponsor_open", parameters: ["sponsor_name": sponsor.name])
-                        if let website = sponsor.website, let url = URL(string: website) {
-                            UIApplication.shared.open(url)
+                }
+
+                NeoCard(backgroundColor: .neoWhite) {
+                    Text("ABOUT")
+                        .font(.headline)
+                        .fontWeight(.black)
+                    Text(sponsor.about ?? sponsor.description)
+                        .font(.body)
+                        .foregroundStyle(.black.opacity(0.9))
+                }
+
+                if sponsor.email != nil || sponsor.phone != nil || sponsor.website != nil {
+                    NeoCard(backgroundColor: .neoWhite) {
+                        Text("CONTACT INFORMATION")
+                            .font(.headline)
+                            .fontWeight(.black)
+
+                        if let email = sponsor.email {
+                            Button {
+                                if let url = URL(string: "mailto:\(email)") { UIApplication.shared.open(url) }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "envelope.fill")
+                                    Text(email).font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    Spacer()
+                                }
+                                .padding(10)
+                                .background(Color.neoBackground)
+                                .border(Color.black, width: 2)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        if let phone = sponsor.phone {
+                            Button {
+                                if let url = URL(string: "tel:\(phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined())") { UIApplication.shared.open(url) }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "phone.fill")
+                                    Text(phone).font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    Spacer()
+                                }
+                                .padding(10)
+                                .background(Color.neoBackground)
+                                .border(Color.black, width: 2)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        if let website = sponsor.website {
+                            Button {
+                                if let url = URL(string: website) { UIApplication.shared.open(url) }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "globe")
+                                    Text(website).font(.system(size: 14, weight: .bold, design: .monospaced)).lineLimit(1)
+                                    Spacer()
+                                }
+                                .padding(10)
+                                .background(Color.neoBackground)
+                                .border(Color.black, width: 2)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("CLOSE")
+                        .font(.headline)
+                        .fontWeight(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.neoYellow)
+                        .foregroundStyle(.black)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
+                        .shadow(color: .black, radius: 0, x: 3, y: 3)
+                }
+                .padding(.top, 10)
             }
-            .padding(16)
+            .padding(24)
         }
+        .background(Color.neoBackground)
     }
 }
 
@@ -483,6 +644,7 @@ struct VendorsScreen: View {
     @ObservedObject var favorites: FavoritesStore
     @State private var query = ""
     @State private var selectedCategories: Set<String> = ["Brewery", "Food Truck"]
+    @State private var selectedVendor: VendorItem? = nil
 
     var vendors: [VendorItem] { eventData?.vendors ?? [] }
     var filtered: [VendorItem] {
@@ -492,49 +654,196 @@ struct VendorsScreen: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                NeoTextField(placeholder: "SEARCH VENDORS...", text: $query)
-                    .padding(.bottom, 8)
+        ZStack {
+            ScrollView {
+                VStack(spacing: 16) {
+                    NeoTextField(placeholder: "SEARCH VENDORS...", text: $query)
+                        .padding(.bottom, 8)
 
-                ForEach(filtered) { vendor in
-                    NeoCard(backgroundColor: .neoWhite) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(vendor.category.uppercased())
-                                    .font(.system(size: 10, weight: .black))
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.neoPink)
-                                    .border(Color.black, width: 1.5)
+                    ForEach(filtered) { vendor in
+                        NeoCard(backgroundColor: .neoWhite) {
+                            HStack(alignment: .center, spacing: 14) {
+                                let resName = getResourceName(vendor.name)
+                                if let uiImage = UIImage(named: resName) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 50, height: 50)
+                                        .background(Color.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                                } else {
+                                    Image(systemName: vendor.category == "Brewery" ? "wineglass" : "fork.knife")
+                                        .font(.system(size: 20))
+                                        .frame(width: 50, height: 50)
+                                        .background(vendor.category == "Brewery" ? Color.neoBlue : Color.neoPink)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                                }
 
-                                Text(vendor.name)
-                                    .font(.headline)
-                                    .fontWeight(.black)
-                                    .foregroundStyle(.black)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(vendor.category.uppercased())
+                                        .font(.system(size: 9, weight: .black))
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.neoPink)
+                                        .border(Color.black, width: 1.5)
 
-                                Text(vendor.description)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.black.opacity(0.8))
+                                    Text(vendor.name)
+                                        .font(.headline)
+                                        .fontWeight(.black)
+                                        .foregroundStyle(.black)
+
+                                    Text(vendor.description)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.black.opacity(0.8))
+                                }
+                                Spacer()
+
+                                Button {
+                                    favorites.toggle(vendor.name)
+                                } label: {
+                                    Image(systemName: favorites.ids.contains(vendor.name) ? "heart.fill" : "heart")
+                                        .font(.title3)
+                                        .foregroundStyle(.black)
+                                        .padding(8)
+                                        .background(favorites.ids.contains(vendor.name) ? Color.neoPink : Color.white)
+                                        .border(Color.black, width: 2)
+                                }
                             }
-                            Spacer()
-
-                            Button {
-                                favorites.toggle(vendor.name)
-                            } label: {
-                                Image(systemName: favorites.ids.contains(vendor.name) ? "heart.fill" : "heart")
-                                    .font(.title3)
-                                    .foregroundStyle(.black)
-                                    .padding(8)
-                                    .background(favorites.ids.contains(vendor.name) ? Color.neoPink : Color.white)
-                                    .border(Color.black, width: 2)
-                            }
+                        }
+                        .onTapGesture {
+                            selectedVendor = vendor
                         }
                     }
                 }
+                .padding(16)
             }
-            .padding(16)
         }
+        .sheet(item: $selectedVendor) { vendor in
+            VendorDetailSheet(vendor: vendor)
+        }
+    }
+}
+
+// MARK: - Vendor Detail Sheet
+struct VendorDetailSheet: View {
+    let vendor: VendorItem
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(spacing: 16) {
+                    let resName = getResourceName(vendor.name)
+                    if let uiImage = UIImage(named: resName) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 64, height: 64)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(vendor.category.uppercased())
+                            .font(.system(size: 10, weight: .black))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.neoPink)
+                            .border(Color.black, width: 1.5)
+
+                        Text(vendor.name)
+                            .font(.title2)
+                            .fontWeight(.black)
+                            .foregroundStyle(.black)
+                    }
+                }
+
+                NeoCard(backgroundColor: .neoWhite) {
+                    Text("ABOUT")
+                        .font(.headline)
+                        .fontWeight(.black)
+                    Text(vendor.about ?? vendor.description)
+                        .font(.body)
+                        .foregroundStyle(.black.opacity(0.9))
+                }
+
+                if vendor.email != nil || vendor.phone != nil || vendor.website != nil {
+                    NeoCard(backgroundColor: .neoWhite) {
+                        Text("CONTACT INFORMATION")
+                            .font(.headline)
+                            .fontWeight(.black)
+
+                        if let email = vendor.email {
+                            Button {
+                                if let url = URL(string: "mailto:\(email)") { UIApplication.shared.open(url) }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "envelope.fill")
+                                    Text(email).font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    Spacer()
+                                }
+                                .padding(10)
+                                .background(Color.neoBackground)
+                                .border(Color.black, width: 2)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        if let phone = vendor.phone {
+                            Button {
+                                if let url = URL(string: "tel:\(phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined())") { UIApplication.shared.open(url) }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "phone.fill")
+                                    Text(phone).font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    Spacer()
+                                }
+                                .padding(10)
+                                .background(Color.neoBackground)
+                                .border(Color.black, width: 2)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        if let website = vendor.website {
+                            Button {
+                                if let url = URL(string: website) { UIApplication.shared.open(url) }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "globe")
+                                    Text(website).font(.system(size: 14, weight: .bold, design: .monospaced)).lineLimit(1)
+                                    Spacer()
+                                }
+                                .padding(10)
+                                .background(Color.neoBackground)
+                                .border(Color.black, width: 2)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("CLOSE")
+                        .font(.headline)
+                        .fontWeight(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.neoYellow)
+                        .foregroundStyle(.black)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
+                        .shadow(color: .black, radius: 0, x: 3, y: 3)
+                }
+                .padding(.top, 10)
+            }
+            .padding(24)
+        }
+        .background(Color.neoBackground)
     }
 }
 
