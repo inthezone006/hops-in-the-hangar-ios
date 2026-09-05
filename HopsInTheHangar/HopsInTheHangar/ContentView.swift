@@ -356,7 +356,7 @@ struct ContentView: View {
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
-                            .background(Color.neoWhite)
+                            .background(Color.neoPink)
                             .foregroundStyle(.black)
                             .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
                             .shadow(color: .black, radius: 0, x: 2, y: 2)
@@ -695,7 +695,7 @@ struct HomeScreen: View {
                                             .font(.system(size: 14, weight: .black, design: .monospaced))
                                             .foregroundStyle(.black)
                                             .padding(4)
-                                            .background(Color.neoYellow)
+                                            .background(Color.white)
                                             .border(Color.black, width: 2)
                                     }
                                 }
@@ -716,7 +716,7 @@ struct HomeScreen: View {
                                         .fill(Color.black)
                                         .offset(x: 3, y: 3)
                                     RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.white)
+                                        .fill(Color.neoYellow)
                                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2.5))
                                 }
                             )
