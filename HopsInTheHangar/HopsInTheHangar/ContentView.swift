@@ -27,7 +27,7 @@ func getResourceName(_ name: String?) -> String {
         .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
 }
 
-// MARK: - Reusable Neo Card Component
+// MARK: - Reusable Neo Brutalist Card Component
 struct NeoCard<Content: View>: View {
     var backgroundColor: Color = .white
     var onClick: (() -> Void)? = nil
@@ -85,7 +85,7 @@ struct NeoTextField: View {
 
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 16, weight: .black))
                     .foregroundStyle(.black)
 
                 TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.gray))
@@ -109,6 +109,115 @@ struct NeoTextField: View {
                     .stroke(Color.black, lineWidth: 3)
             )
         }
+    }
+}
+
+// MARK: - Neo-Brutalist Multi-Selection Filter Sheet
+struct FilterSelectionSheet: View {
+    let title: String
+    let options: [String]
+    @Binding var selectedOptions: Set<String>
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            ZStack {
+                Color.neoYellow
+                
+                HStack {
+                    Button("SELECT ALL") {
+                        selectedOptions = Set(options)
+                    }
+                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.white)
+                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
+
+                    Spacer()
+
+                    Text(title)
+                        .font(.system(size: 15, weight: .black, design: .monospaced))
+                        .tracking(1)
+                        .foregroundStyle(.black)
+
+                    Spacer()
+
+                    Button("DONE") {
+                        dismiss()
+                    }
+                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.white)
+                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
+                }
+                .padding(.horizontal, 16)
+            }
+            .frame(height: 60)
+            .overlay(Rectangle().frame(height: 3).foregroundColor(.black), alignment: .bottom)
+
+            // Options List
+            ScrollView {
+                VStack(spacing: 14) {
+                    ForEach(options, id: \.self) { option in
+                        HStack {
+                            Text(option)
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                                .foregroundStyle(.black)
+                            Spacer()
+
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(selectedOptions.contains(option) ? Color.neoYellow : Color.white)
+                                    .frame(width: 28, height: 28)
+                                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
+
+                                if selectedOptions.contains(option) {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 12, weight: .black))
+                                        .foregroundStyle(.black)
+                                }
+                            }
+                        }
+                        .padding(14)
+                        .background(Color.white)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                        .shadow(color: .black, radius: 0, x: 3, y: 3)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selectedOptions.contains(option) {
+                                selectedOptions.remove(option)
+                            } else {
+                                selectedOptions.insert(option)
+                            }
+                        }
+                    }
+                }
+                .padding(20)
+            }
+            .background(Color.neoBackground)
+
+            // Bottom Apply Bar
+            VStack(spacing: 0) {
+                Rectangle().fill(Color.black).frame(height: 3)
+                Button {
+                    dismiss()
+                } label: {
+                    Text("APPLY FILTERS")
+                        .font(.system(size: 14, weight: .black, design: .monospaced))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.neoYellow)
+                        .foregroundStyle(.black)
+                }
+                .background(Color.neoYellow)
+            }
+        }
+        .background(Color.neoBackground)
     }
 }
 
@@ -228,8 +337,8 @@ struct ContentView: View {
                     Color.neoYellow
 
                     Text(tabTitle(for: currentTab))
-                        .font(.system(size: 16, weight: .black))
-                        .tracking(1)
+                        .font(.system(size: 18, weight: .black, design: .monospaced))
+                        .tracking(1.5)
                         .foregroundStyle(.black)
 
                     HStack {
@@ -242,21 +351,21 @@ struct ContentView: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "ticket.fill")
-                                    .font(.system(size: 10, weight: .black))
+                                    .font(.system(size: 11, weight: .black))
                                 Text("TICKETS")
-                                    .font(.system(size: 10, weight: .black))
+                                    .font(.system(size: 11, weight: .black, design: .monospaced))
                             }
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, 10)
                             .padding(.vertical, 6)
                             .background(Color.neoWhite)
                             .foregroundStyle(.black)
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
                             .shadow(color: .black, radius: 0, x: 2, y: 2)
                         }
                     }
                     .padding(.horizontal, 16)
                 }
-                .frame(height: 50)
+                .frame(height: 56)
                 
                 Rectangle()
                     .fill(Color.black)
@@ -293,14 +402,14 @@ struct ContentView: View {
                     .fill(Color.black)
                     .frame(height: 3)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     BottomNavItem(title: "HOME", icon: "house.fill", color: .neoYellow, index: 0, currentTab: $currentTab)
                     BottomNavItem(title: "SPONSORS", icon: "star.fill", color: .neoPink, index: 1, currentTab: $currentTab)
                     BottomNavItem(title: "EVENTS", icon: "list.bullet", color: .neoGreen, index: 2, currentTab: $currentTab)
                     BottomNavItem(title: "VENDORS", icon: "cart.fill", color: .neoBlue, index: 3, currentTab: $currentTab)
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .frame(height: 64)
                 .background(Color.white)
             }
             .fixedSize(horizontal: false, vertical: true)
@@ -321,7 +430,7 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Custom Bottom Nav Tab Item
+// MARK: - Custom Square-ish Bottom Nav Button
 struct BottomNavItem: View {
     let title: String
     let icon: String
@@ -333,13 +442,13 @@ struct BottomNavItem: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: 8)
                 .fill(Color.black)
                 .offset(x: isSelected ? 1 : 2, y: isSelected ? 1 : 2)
 
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: 8)
                 .fill(isSelected ? color : Color.neoWhite)
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
                 .contentShape(Rectangle())
                 .onTapGesture {
                     currentTab = index
@@ -347,15 +456,17 @@ struct BottomNavItem: View {
 
             VStack(spacing: 2) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                 Text(title)
-                    .font(.system(size: 8, weight: .black))
+                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
             .foregroundColor(.black)
             .padding(.horizontal, 4)
-            .padding(.vertical, 6)
+            .padding(.vertical, 4)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: 82, maxHeight: 46)
         .offset(x: isSelected ? 1 : 0, y: isSelected ? 1 : 0)
     }
 }
@@ -364,22 +475,69 @@ struct BottomNavItem: View {
 struct HomeScreen: View {
     let eventData: EventData?
     @State private var isWelcomeExpanded = false
+    @State private var carouselImages: [String] = {
+        var matches: [String] = []
+        for i in 1...10 {
+            let name = String(format: "carousel_%02d", i)
+            if UIImage(named: name) != nil {
+                matches.append(name)
+            }
+        }
+        if matches.isEmpty {
+            matches = ["main_icon", "AppIcon"]
+        }
+        return matches
+    }()
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                if !carouselImages.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            ForEach(carouselImages, id: \.self) { imageName in
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.black)
+                                        .offset(x: 4, y: 4)
+
+                                    if let uiImg = UIImage(named: imageName) {
+                                        Image(uiImage: uiImg)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 240, height: 240)
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
+                                    } else {
+                                        Image(systemName: "airplane.circle.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 80, height: 80)
+                                            .foregroundStyle(Color.neoYellow)
+                                            .frame(width: 240, height: 240)
+                                            .background(Color.white)
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
+                                    }
+                                }
+                                .padding(.vertical, 6)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
+                }
+
                 NeoCard(backgroundColor: .neoWhite) {
                     Button {
                         withAnimation { isWelcomeExpanded.toggle() }
                     } label: {
                         HStack {
                             Text("WELCOME TO THE SHOW")
-                                .font(.headline)
-                                .fontWeight(.black)
+                                .font(.system(size: 16, weight: .black, design: .monospaced))
                                 .foregroundStyle(.black)
                             Spacer()
-                            Text(isWelcomeExpanded ? "[-] " : "[+] ")
-                                .fontWeight(.black)
+                            Text(isWelcomeExpanded ? " [-] " : " [+] ")
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
                                 .foregroundStyle(.black)
                                 .padding(4)
                                 .background(Color.neoYellow)
@@ -389,30 +547,31 @@ struct HomeScreen: View {
                     .buttonStyle(.plain)
 
                     Text("Welcome to Hops in the Hangar, your Craft Beer & Airshow event app! Explore a lineup of vendors and sponsors, discover detailed venue information, and enjoy exciting entertainment.")
-                        .font(.body)
-                        .foregroundStyle(.black.opacity(0.8))
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.black.opacity(0.9))
 
                     if isWelcomeExpanded {
                         Text("Craft beer, beverages, and aircraft come together to create not only a fun social event, but also an extremely unique community experience at the Middletown Regional Airport.")
-                            .font(.body)
-                            .foregroundStyle(.black.opacity(0.8))
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.black.opacity(0.9))
+                        Text("Whether you're here for the thrilling air show performances or the incredible selection of breweries, this app will help you make the most of your experience.")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.black.opacity(0.9))
                     }
                 }
 
                 NeoCard(backgroundColor: .neoPink) {
                     Text("Hops 2026 Recap")
-                        .font(.headline)
-                        .fontWeight(.black)
+                        .font(.system(size: 16, weight: .black, design: .monospaced))
                         .foregroundStyle(.black)
 
-                    Text("As featured on WLWT, Hops in the Hangar 2026 was a stellar celebration of craft beer and aviation.")
-                        .font(.body)
-                        .foregroundStyle(.black.opacity(0.8))
+                    Text("As featured on WLWT, Hops in the Hangar 2026 was a stellar celebration of craft beer and aviation at the Middletown Regional Airport.")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.black.opacity(0.9))
 
                     if let url = URL(string: "https://www.wlwt.com/article/annual-hops-in-the-hangar-fundraiser-middletown-regional-airport/73466732") {
                         Link("Watch the full news segment here.", destination: url)
-                            .font(.subheadline)
-                            .fontWeight(.black)
+                            .font(.system(size: 13, weight: .black, design: .monospaced))
                             .underline()
                             .foregroundStyle(.blue)
                     }
@@ -421,17 +580,60 @@ struct HomeScreen: View {
                 if let info = eventData?.info {
                     NeoCard(backgroundColor: .neoBlue) {
                         Text("VENUE & LOGISTICS")
-                            .font(.headline)
-                            .fontWeight(.black)
+                            .font(.system(size: 16, weight: .black, design: .monospaced))
+                            .foregroundStyle(.black)
 
-                        Text("Parking").fontWeight(.black)
-                        Text(info.parking).font(.subheadline).foregroundStyle(.black.opacity(0.8))
+                        Text("Parking")
+                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                        Text(info.parking)
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.black.opacity(0.8))
 
                         Divider().overlay(.black)
 
-                        Text("Event Rules").fontWeight(.black)
-                        Text(info.rules).font(.subheadline).foregroundStyle(.black.opacity(0.8))
+                        Text("Event Rules")
+                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                        Text(info.rules)
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.black.opacity(0.8))
                     }
+                }
+
+                if let faqs = eventData?.faq, !faqs.isEmpty {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("FAQ")
+                            .font(.system(size: 18, weight: .black, design: .monospaced))
+                            .foregroundStyle(.black)
+                            .padding(.horizontal, 4)
+
+                        ForEach(faqs) { faq in
+                            DisclosureGroup {
+                                Text(faq.answer)
+                                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(.black.opacity(0.8))
+                                    .padding(.top, 6)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            } label: {
+                                Text(faq.question)
+                                    .font(.system(size: 14, weight: .black, design: .monospaced))
+                                    .foregroundStyle(.black)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            .tint(.black)
+                            .padding(14)
+                            .background(
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color.black)
+                                        .offset(x: 3, y: 3)
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color.white)
+                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2.5))
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 4)
                 }
             }
             .padding(16)
@@ -443,8 +645,10 @@ struct HomeScreen: View {
 struct SponsorsScreen: View {
     let eventData: EventData?
     @State private var query = ""
+    private let allTiers = ["Premier", "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Brewery"]
     @State private var selectedTiers: Set<String> = ["Premier", "Top Flight", "First Class", "Business Class", "Coach Class", "Passport", "Brewery"]
     @State private var selectedSponsor: SponsorItem? = nil
+    @State private var isFilterPresented = false
 
     var sponsors: [SponsorItem] { eventData?.sponsors ?? [] }
     var filtered: [SponsorItem] {
@@ -457,46 +661,64 @@ struct SponsorsScreen: View {
         ZStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    NeoTextField(placeholder: "SEARCH SPONSORS...", text: $query)
-                        .padding(.bottom, 8)
+                    HStack(spacing: 12) {
+                        NeoTextField(placeholder: "SEARCH SPONSORS...", text: $query)
+                            .frame(maxWidth: .infinity)
+
+                        Button {
+                            isFilterPresented = true
+                        } label: {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.black)
+                                    .offset(x: 3, y: 3)
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.neoYellow)
+                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
+                                Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.black)
+                            }
+                            .frame(width: 52, height: 52)
+                        }
+                    }
+                    .padding(.bottom, 4)
 
                     ForEach(filtered) { sponsor in
                         NeoCard(backgroundColor: .neoWhite) {
                             HStack(alignment: .center, spacing: 14) {
-                                // Logo Asset Thumbnail
                                 let resName = getResourceName(sponsor.name)
                                 if let uiImage = UIImage(named: resName) {
                                     Image(uiImage: uiImage)
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: 50, height: 50)
+                                        .frame(width: 52, height: 52)
                                         .background(Color.white)
                                         .clipShape(RoundedRectangle(cornerRadius: 6))
                                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                                 } else {
                                     Image(systemName: "star.fill")
                                         .font(.system(size: 20))
-                                        .frame(width: 50, height: 50)
+                                        .frame(width: 52, height: 52)
                                         .background(Color.neoYellow)
                                         .clipShape(RoundedRectangle(cornerRadius: 6))
                                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                                 }
 
-                                VStack(alignment: .leading, spacing: 4) {
+                                VStack(alignment: .leading, spacing: 6) {
                                     Text(sponsor.level.uppercased())
-                                        .font(.system(size: 9, weight: .black))
+                                        .font(.system(size: 10, weight: .black, design: .monospaced))
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
                                         .background(Color.neoYellow)
                                         .border(Color.black, width: 1.5)
 
                                     Text(sponsor.name)
-                                        .font(.headline)
-                                        .fontWeight(.black)
+                                        .font(.system(size: 16, weight: .black, design: .monospaced))
                                         .foregroundStyle(.black)
 
                                     Text(sponsor.description)
-                                        .font(.subheadline)
+                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
                                         .foregroundStyle(.black.opacity(0.8))
                                 }
                                 Spacer()
@@ -513,6 +735,9 @@ struct SponsorsScreen: View {
         }
         .sheet(item: $selectedSponsor) { sponsor in
             SponsorDetailSheet(sponsor: sponsor)
+        }
+        .sheet(isPresented: $isFilterPresented) {
+            FilterSelectionSheet(title: "FILTER SPONSORS", options: allTiers, selectedOptions: $selectedTiers)
         }
     }
 }
@@ -537,35 +762,32 @@ struct SponsorDetailSheet: View {
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
                     }
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text(sponsor.level.uppercased())
-                            .font(.system(size: 10, weight: .black))
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.neoYellow)
                             .border(Color.black, width: 1.5)
 
                         Text(sponsor.name)
-                            .font(.title2)
-                            .fontWeight(.black)
+                            .font(.system(size: 18, weight: .black, design: .monospaced))
                             .foregroundStyle(.black)
                     }
                 }
 
                 NeoCard(backgroundColor: .neoWhite) {
                     Text("ABOUT")
-                        .font(.headline)
-                        .fontWeight(.black)
+                        .font(.system(size: 14, weight: .black, design: .monospaced))
                     Text(sponsor.about ?? sponsor.description)
-                        .font(.body)
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
                         .foregroundStyle(.black.opacity(0.9))
                 }
 
                 if sponsor.email != nil || sponsor.phone != nil || sponsor.website != nil {
                     NeoCard(backgroundColor: .neoWhite) {
                         Text("CONTACT INFORMATION")
-                            .font(.headline)
-                            .fontWeight(.black)
+                            .font(.system(size: 14, weight: .black, design: .monospaced))
 
                         if let email = sponsor.email {
                             Button {
@@ -573,10 +795,10 @@ struct SponsorDetailSheet: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "envelope.fill")
-                                    Text(email).font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    Text(email).font(.system(size: 13, weight: .bold, design: .monospaced))
                                     Spacer()
                                 }
-                                .padding(10)
+                                .padding(12)
                                 .background(Color.neoBackground)
                                 .border(Color.black, width: 2)
                             }
@@ -589,10 +811,10 @@ struct SponsorDetailSheet: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "phone.fill")
-                                    Text(phone).font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    Text(phone).font(.system(size: 13, weight: .bold, design: .monospaced))
                                     Spacer()
                                 }
-                                .padding(10)
+                                .padding(12)
                                 .background(Color.neoBackground)
                                 .border(Color.black, width: 2)
                             }
@@ -605,10 +827,10 @@ struct SponsorDetailSheet: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "globe")
-                                    Text(website).font(.system(size: 14, weight: .bold, design: .monospaced)).lineLimit(1)
+                                    Text(website).font(.system(size: 13, weight: .bold, design: .monospaced)).lineLimit(1)
                                     Spacer()
                                 }
-                                .padding(10)
+                                .padding(12)
                                 .background(Color.neoBackground)
                                 .border(Color.black, width: 2)
                             }
@@ -621,8 +843,7 @@ struct SponsorDetailSheet: View {
                     dismiss()
                 } label: {
                     Text("CLOSE")
-                        .font(.headline)
-                        .fontWeight(.black)
+                        .font(.system(size: 15, weight: .black, design: .monospaced))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.neoYellow)
@@ -643,8 +864,10 @@ struct VendorsScreen: View {
     let eventData: EventData?
     @ObservedObject var favorites: FavoritesStore
     @State private var query = ""
+    private let allCategories = ["Brewery", "Food Truck"]
     @State private var selectedCategories: Set<String> = ["Brewery", "Food Truck"]
     @State private var selectedVendor: VendorItem? = nil
+    @State private var isFilterPresented = false
 
     var vendors: [VendorItem] { eventData?.vendors ?? [] }
     var filtered: [VendorItem] {
@@ -657,8 +880,28 @@ struct VendorsScreen: View {
         ZStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    NeoTextField(placeholder: "SEARCH VENDORS...", text: $query)
-                        .padding(.bottom, 8)
+                    HStack(spacing: 12) {
+                        NeoTextField(placeholder: "SEARCH VENDORS...", text: $query)
+                            .frame(maxWidth: .infinity)
+
+                        Button {
+                            isFilterPresented = true
+                        } label: {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.black)
+                                    .offset(x: 3, y: 3)
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.neoYellow)
+                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
+                                Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.black)
+                            }
+                            .frame(width: 52, height: 52)
+                        }
+                    }
+                    .padding(.bottom, 4)
 
                     ForEach(filtered) { vendor in
                         NeoCard(backgroundColor: .neoWhite) {
@@ -668,34 +911,33 @@ struct VendorsScreen: View {
                                     Image(uiImage: uiImage)
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: 50, height: 50)
+                                        .frame(width: 52, height: 52)
                                         .background(Color.white)
                                         .clipShape(RoundedRectangle(cornerRadius: 6))
                                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                                 } else {
                                     Image(systemName: vendor.category == "Brewery" ? "wineglass" : "fork.knife")
                                         .font(.system(size: 20))
-                                        .frame(width: 50, height: 50)
+                                        .frame(width: 52, height: 52)
                                         .background(vendor.category == "Brewery" ? Color.neoBlue : Color.neoPink)
                                         .clipShape(RoundedRectangle(cornerRadius: 6))
                                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                                 }
 
-                                VStack(alignment: .leading, spacing: 4) {
+                                VStack(alignment: .leading, spacing: 6) {
                                     Text(vendor.category.uppercased())
-                                        .font(.system(size: 9, weight: .black))
+                                        .font(.system(size: 10, weight: .black, design: .monospaced))
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
                                         .background(Color.neoPink)
                                         .border(Color.black, width: 1.5)
 
                                     Text(vendor.name)
-                                        .font(.headline)
-                                        .fontWeight(.black)
+                                        .font(.system(size: 16, weight: .black, design: .monospaced))
                                         .foregroundStyle(.black)
 
                                     Text(vendor.description)
-                                        .font(.subheadline)
+                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
                                         .foregroundStyle(.black.opacity(0.8))
                                 }
                                 Spacer()
@@ -704,9 +946,9 @@ struct VendorsScreen: View {
                                     favorites.toggle(vendor.name)
                                 } label: {
                                     Image(systemName: favorites.ids.contains(vendor.name) ? "heart.fill" : "heart")
-                                        .font(.title3)
+                                        .font(.system(size: 18, weight: .bold))
                                         .foregroundStyle(.black)
-                                        .padding(8)
+                                        .padding(10)
                                         .background(favorites.ids.contains(vendor.name) ? Color.neoPink : Color.white)
                                         .border(Color.black, width: 2)
                                 }
@@ -722,6 +964,9 @@ struct VendorsScreen: View {
         }
         .sheet(item: $selectedVendor) { vendor in
             VendorDetailSheet(vendor: vendor)
+        }
+        .sheet(isPresented: $isFilterPresented) {
+            FilterSelectionSheet(title: "FILTER VENDORS", options: allCategories, selectedOptions: $selectedCategories)
         }
     }
 }
@@ -746,35 +991,32 @@ struct VendorDetailSheet: View {
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
                     }
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text(vendor.category.uppercased())
-                            .font(.system(size: 10, weight: .black))
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.neoPink)
                             .border(Color.black, width: 1.5)
 
                         Text(vendor.name)
-                            .font(.title2)
-                            .fontWeight(.black)
+                            .font(.system(size: 18, weight: .black, design: .monospaced))
                             .foregroundStyle(.black)
                     }
                 }
 
                 NeoCard(backgroundColor: .neoWhite) {
                     Text("ABOUT")
-                        .font(.headline)
-                        .fontWeight(.black)
+                        .font(.system(size: 14, weight: .black, design: .monospaced))
                     Text(vendor.about ?? vendor.description)
-                        .font(.body)
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
                         .foregroundStyle(.black.opacity(0.9))
                 }
 
                 if vendor.email != nil || vendor.phone != nil || vendor.website != nil {
                     NeoCard(backgroundColor: .neoWhite) {
                         Text("CONTACT INFORMATION")
-                            .font(.headline)
-                            .fontWeight(.black)
+                            .font(.system(size: 14, weight: .black, design: .monospaced))
 
                         if let email = vendor.email {
                             Button {
@@ -782,10 +1024,10 @@ struct VendorDetailSheet: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "envelope.fill")
-                                    Text(email).font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    Text(email).font(.system(size: 13, weight: .bold, design: .monospaced))
                                     Spacer()
                                 }
-                                .padding(10)
+                                .padding(12)
                                 .background(Color.neoBackground)
                                 .border(Color.black, width: 2)
                             }
@@ -798,10 +1040,10 @@ struct VendorDetailSheet: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "phone.fill")
-                                    Text(phone).font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    Text(phone).font(.system(size: 13, weight: .bold, design: .monospaced))
                                     Spacer()
                                 }
-                                .padding(10)
+                                .padding(12)
                                 .background(Color.neoBackground)
                                 .border(Color.black, width: 2)
                             }
@@ -814,10 +1056,10 @@ struct VendorDetailSheet: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "globe")
-                                    Text(website).font(.system(size: 14, weight: .bold, design: .monospaced)).lineLimit(1)
+                                    Text(website).font(.system(size: 13, weight: .bold, design: .monospaced)).lineLimit(1)
                                     Spacer()
                                 }
-                                .padding(10)
+                                .padding(12)
                                 .background(Color.neoBackground)
                                 .border(Color.black, width: 2)
                             }
@@ -830,8 +1072,7 @@ struct VendorDetailSheet: View {
                     dismiss()
                 } label: {
                     Text("CLOSE")
-                        .font(.headline)
-                        .fontWeight(.black)
+                        .font(.system(size: 15, weight: .black, design: .monospaced))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.neoYellow)
@@ -855,28 +1096,36 @@ struct EntertainmentView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Text("GROUND ENTERTAINMENT")
-                    .font(.headline)
-                    .fontWeight(.black)
+                    .font(.system(size: 16, weight: .black, design: .monospaced))
+                    .foregroundStyle(.black)
 
                 if let ground = eventData?.groundEntertainment {
                     ForEach(ground) { item in
                         NeoCard(backgroundColor: .neoWhite) {
-                            Text(item.name).fontWeight(.black)
-                            Text(item.role).font(.subheadline).foregroundStyle(.black.opacity(0.7))
+                            Text(item.name)
+                                .font(.system(size: 16, weight: .black, design: .monospaced))
+                                .foregroundStyle(.black)
+                            Text(item.role)
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.black.opacity(0.7))
                         }
                     }
                 }
 
                 Text("EVENT SCHEDULE")
-                    .font(.headline)
-                    .fontWeight(.black)
+                    .font(.system(size: 16, weight: .black, design: .monospaced))
+                    .foregroundStyle(.black)
                     .padding(.top, 10)
 
                 if let schedule = eventData?.schedule {
                     ForEach(schedule) { item in
                         NeoCard(backgroundColor: .neoGreen) {
-                            Text(item.event).fontWeight(.black)
-                            Text(item.time).font(.subheadline).fontWeight(.bold)
+                            Text(item.event)
+                                .font(.system(size: 16, weight: .black, design: .monospaced))
+                                .foregroundStyle(.black)
+                            Text(item.time)
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                                .foregroundStyle(.black)
                         }
                     }
                 }
