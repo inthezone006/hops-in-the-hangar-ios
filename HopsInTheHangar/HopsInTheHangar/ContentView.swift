@@ -215,6 +215,38 @@ struct FilterSelectionSheet: View {
     }
 }
 
+// MARK: - Reusable Contact Row Component for Sheets
+struct DetailContactRow: View {
+    let icon: String
+    let value: String
+    let onClick: () -> Void
+
+    var body: some View {
+        Button(action: onClick) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.black)
+                    .offset(x: 2, y: 2)
+
+                HStack(spacing: 12) {
+                    Image(systemName: icon)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.black)
+                    Text(value)
+                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                        .foregroundColor(.black)
+                        .lineLimit(1)
+                    Spacer()
+                }
+                .padding(12)
+                .background(Color.white)
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Models
 struct FAQItem: Codable, Identifiable, Hashable {
     let id = UUID()
@@ -805,26 +837,34 @@ struct SponsorsScreen: View {
                     .padding(.bottom, 4)
 
                     ForEach(filtered) { sponsor in
-                        NeoCard(backgroundColor: .neoWhite) {
+                        NeoCard(backgroundColor: .neoWhite, onClick: {
+                            Analytics.logEvent("sponsor_open", parameters: ["sponsor_name": sponsor.name])
+                            selectedSponsor = sponsor
+                        }) {
                             HStack(alignment: .center, spacing: 14) {
-                                let resName = getResourceName(sponsor.name)
+                                let names = (sponsor.name.contains("Kara Goheen") || sponsor.name.contains("Affordable Dentures")) ? [sponsor.name] : sponsor.name.split(separator: "&").map { String($0).trimmingCharacters(in: .whitespaces) }
                                 let boxBg = Color(hex: sponsor.background)
-                                
-                                if let uiImage = UIImage(named: resName) {
-                                    Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 52, height: 52)
-                                        .background(boxBg)
-                                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
-                                } else {
-                                    Image(systemName: "star.fill")
-                                        .font(.system(size: 20))
-                                        .frame(width: 52, height: 52)
-                                        .background(boxBg == .white ? Color.neoYellow : boxBg)
-                                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+
+                                HStack(spacing: 4) {
+                                    ForEach(Array(names.enumerated()), id: \.offset) { _, name in
+                                        let resName = getResourceName(name)
+                                        if let uiImage = UIImage(named: resName) {
+                                            Image(uiImage: uiImage)
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 52, height: 52)
+                                                .background(boxBg)
+                                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                                        } else {
+                                            Image(systemName: "star.fill")
+                                                .font(.system(size: 20))
+                                                .frame(width: 52, height: 52)
+                                                .background(boxBg == .white ? Color.neoYellow : boxBg)
+                                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                                        }
+                                    }
                                 }
 
                                 VStack(alignment: .leading, spacing: 6) {
@@ -845,10 +885,6 @@ struct SponsorsScreen: View {
                                 }
                                 Spacer()
                             }
-                        }
-                        .onTapGesture {
-                            Analytics.logEvent("sponsor_open", parameters: ["sponsor_name": sponsor.name])
-                            selectedSponsor = sponsor
                         }
                     }
                 }
@@ -873,17 +909,32 @@ struct SponsorDetailSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 16) {
-                    let resName = getResourceName(sponsor.name)
+                    let names = (sponsor.name.contains("Kara Goheen") || sponsor.name.contains("Affordable Dentures")) ? [sponsor.name] : sponsor.name.split(separator: "&").map { String($0).trimmingCharacters(in: .whitespaces) }
                     let boxBg = Color(hex: sponsor.background)
-                    
-                    if let uiImage = UIImage(named: resName) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 64, height: 64)
-                            .background(boxBg)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+
+                    HStack(spacing: 4) {
+                        ForEach(Array(names.enumerated()), id: \.offset) { _, name in
+                            let resName = getResourceName(name)
+                            if let uiImage = UIImage(named: resName) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 64, height: 64)
+                                    .background(boxBg)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                            } else {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(boxBg == .white ? Color.neoYellow : boxBg)
+                                        .frame(width: 64, height: 64)
+                                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                                    Image(systemName: "star.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.black)
+                                }
+                            }
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -908,57 +959,34 @@ struct SponsorDetailSheet: View {
                         .foregroundStyle(.black.opacity(0.9))
                 }
 
-                if sponsor.email != nil || sponsor.phone != nil || sponsor.website != nil {
+                if sponsor.email != nil || sponsor.phone != nil || sponsor.website != nil || !(sponsor.links?.isEmpty ?? true) {
                     NeoCard(backgroundColor: .neoWhite) {
                         Text("CONTACT INFORMATION")
                             .font(.system(size: 14, weight: .black, design: .monospaced))
 
                         if let email = sponsor.email {
-                            Button {
+                            DetailContactRow(icon: "envelope.fill", value: email) {
                                 if let url = URL(string: "mailto:\(email)") { UIApplication.shared.open(url) }
-                            } label: {
-                                HStack {
-                                    Image(systemName: "envelope.fill")
-                                    Text(email).font(.system(size: 13, weight: .bold, design: .monospaced))
-                                    Spacer()
-                                }
-                                .padding(12)
-                                .background(Color.neoBackground)
-                                .border(Color.black, width: 2)
                             }
-                            .buttonStyle(.plain)
                         }
 
                         if let phone = sponsor.phone {
-                            Button {
-                                if let url = URL(string: "tel:\(phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined())") { UIApplication.shared.open(url) }
-                            } label: {
-                                HStack {
-                                    Image(systemName: "phone.fill")
-                                    Text(phone).font(.system(size: 13, weight: .bold, design: .monospaced))
-                                    Spacer()
-                                }
-                                .padding(12)
-                                .background(Color.neoBackground)
-                                .border(Color.black, width: 2)
+                            DetailContactRow(icon: "phone.fill", value: phone) {
+                                let cleaned = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                                if let url = URL(string: "tel:\(cleaned)") { UIApplication.shared.open(url) }
                             }
-                            .buttonStyle(.plain)
                         }
 
-                        if let website = sponsor.website {
-                            Button {
-                                if let url = URL(string: website) { UIApplication.shared.open(url) }
-                            } label: {
-                                HStack {
-                                    Image(systemName: "globe")
-                                    Text(website).font(.system(size: 13, weight: .bold, design: .monospaced)).lineLimit(1)
-                                    Spacer()
+                        if let links = sponsor.links, !links.isEmpty {
+                            ForEach(links, id: \.url) { link in
+                                DetailContactRow(icon: "globe", value: "\(link.label): \(link.url)") {
+                                    if let url = URL(string: link.url) { UIApplication.shared.open(url) }
                                 }
-                                .padding(12)
-                                .background(Color.neoBackground)
-                                .border(Color.black, width: 2)
                             }
-                            .buttonStyle(.plain)
+                        } else if let website = sponsor.website {
+                            DetailContactRow(icon: "globe", value: website) {
+                                if let url = URL(string: website) { UIApplication.shared.open(url) }
+                            }
                         }
                     }
                 }
@@ -1027,7 +1055,9 @@ struct VendorsScreen: View {
                     .padding(.bottom, 4)
 
                     ForEach(filtered) { vendor in
-                        NeoCard(backgroundColor: .neoWhite) {
+                        NeoCard(backgroundColor: .neoWhite, onClick: {
+                            selectedVendor = vendor
+                        }) {
                             HStack(alignment: .center, spacing: 14) {
                                 let resName = getResourceName(vendor.name)
                                 let boxBg = Color(hex: vendor.background)
@@ -1068,9 +1098,6 @@ struct VendorsScreen: View {
                                 Spacer()
                             }
                         }
-                        .onTapGesture {
-                            selectedVendor = vendor
-                        }
                     }
                 }
                 .padding(16)
@@ -1105,6 +1132,13 @@ struct VendorDetailSheet: View {
                             .background(boxBg)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                    } else {
+                        Image(systemName: vendor.category == "Brewery" ? "wineglass" : "fork.knife")
+                            .font(.system(size: 24))
+                            .frame(width: 64, height: 64)
+                            .background(boxBg == .white ? (vendor.category == "Brewery" ? Color.neoBlue : Color.neoPink) : boxBg)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -1135,51 +1169,22 @@ struct VendorDetailSheet: View {
                             .font(.system(size: 14, weight: .black, design: .monospaced))
 
                         if let email = vendor.email {
-                            Button {
+                            DetailContactRow(icon: "envelope.fill", value: email) {
                                 if let url = URL(string: "mailto:\(email)") { UIApplication.shared.open(url) }
-                            } label: {
-                                HStack {
-                                    Image(systemName: "envelope.fill")
-                                    Text(email).font(.system(size: 13, weight: .bold, design: .monospaced))
-                                    Spacer()
-                                }
-                                .padding(12)
-                                .background(Color.neoBackground)
-                                .border(Color.black, width: 2)
                             }
-                            .buttonStyle(.plain)
                         }
 
                         if let phone = vendor.phone {
-                            Button {
-                                if let url = URL(string: "tel:\(phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined())") { UIApplication.shared.open(url) }
-                            } label: {
-                                HStack {
-                                    Image(systemName: "phone.fill")
-                                    Text(phone).font(.system(size: 13, weight: .bold, design: .monospaced))
-                                    Spacer()
-                                }
-                                .padding(12)
-                                .background(Color.neoBackground)
-                                .border(Color.black, width: 2)
+                            DetailContactRow(icon: "phone.fill", value: phone) {
+                                let cleaned = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                                if let url = URL(string: "tel:\(cleaned)") { UIApplication.shared.open(url) }
                             }
-                            .buttonStyle(.plain)
                         }
 
                         if let website = vendor.website {
-                            Button {
+                            DetailContactRow(icon: "globe", value: website) {
                                 if let url = URL(string: website) { UIApplication.shared.open(url) }
-                            } label: {
-                                HStack {
-                                    Image(systemName: "globe")
-                                    Text(website).font(.system(size: 13, weight: .bold, design: .monospaced)).lineLimit(1)
-                                    Spacer()
-                                }
-                                .padding(12)
-                                .background(Color.neoBackground)
-                                .border(Color.black, width: 2)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -1219,23 +1224,7 @@ struct EntertainmentView: View {
 
                     if let ground = eventData?.groundEntertainment {
                         ForEach(ground) { item in
-                            NeoCard(backgroundColor: .neoWhite) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(item.name)
-                                            .font(.system(size: 16, weight: .black, design: .monospaced))
-                                            .foregroundStyle(.black)
-                                        Text(item.role)
-                                            .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                            .foregroundStyle(.black.opacity(0.7))
-                                    }
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundStyle(.black)
-                                }
-                            }
-                            .onTapGesture {
+                            EntertainmentCard(item: item) {
                                 selectedPerformer = item
                             }
                         }
@@ -1248,23 +1237,7 @@ struct EntertainmentView: View {
 
                     if let performers = eventData?.performers {
                         ForEach(performers) { item in
-                            NeoCard(backgroundColor: .neoWhite) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(item.name)
-                                            .font(.system(size: 16, weight: .black, design: .monospaced))
-                                            .foregroundStyle(.black)
-                                        Text(item.role)
-                                            .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                            .foregroundStyle(.black.opacity(0.7))
-                                    }
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundStyle(.black)
-                                }
-                            }
-                            .onTapGesture {
+                            EntertainmentCard(item: item) {
                                 selectedPerformer = item
                             }
                         }
@@ -1297,24 +1270,105 @@ struct EntertainmentView: View {
     }
 }
 
+// MARK: - Entertainment Card Button
+struct EntertainmentCard: View {
+    let item: EntertainmentItem
+    let onClick: () -> Void
+
+    var category: String {
+        if let cat = item.category, !cat.isEmpty { return cat }
+        let role = item.role.lowercased()
+        if role.contains("singer") || role.contains("anthem") { return "ANTHEM" }
+        if role.contains("dj") || role.contains("music") { return "MUSIC" }
+        if role.contains("check in") { return "CHECK IN" }
+        if role.contains("announcer") { return "ANNOUNCER" }
+        return "PERFORMANCE"
+    }
+
+    var iconName: String {
+        switch category {
+        case "MUSIC": return "music.note"
+        case "ANTHEM": return "mic.fill"
+        case "CHECK IN": return "heart.fill"
+        case "ANNOUNCER": return "waveform"
+        default: return "airplane"
+        }
+    }
+
+    var body: some View {
+        NeoCard(backgroundColor: .neoWhite, onClick: onClick) {
+            HStack(alignment: .center, spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.neoYellow)
+                        .frame(width: 42, height: 42)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                    Image(systemName: iconName)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.black)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(category.uppercased())
+                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.neoPink)
+                        .border(Color.black, width: 1.5)
+
+                    Text(item.name)
+                        .font(.system(size: 16, weight: .black, design: .monospaced))
+                        .foregroundStyle(.black)
+
+                    Text(item.role)
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.black.opacity(0.7))
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.black)
+            }
+        }
+    }
+}
+
 // MARK: - Performer / Entertainer Detail Sheet
 struct PerformerDetailSheet: View {
     let performer: EntertainmentItem
     @Environment(\.dismiss) private var dismiss
 
+    var category: String {
+        if let cat = performer.category, !cat.isEmpty { return cat }
+        let role = performer.role.lowercased()
+        if role.contains("singer") || role.contains("anthem") { return "ANTHEM" }
+        if role.contains("dj") || role.contains("music") { return "MUSIC" }
+        if role.contains("check in") { return "CHECK IN" }
+        if role.contains("announcer") { return "ANNOUNCER" }
+        return "PERFORMANCE"
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 16) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.neoYellow)
+                            .frame(width: 64, height: 64)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 26))
+                            .foregroundColor(.black)
+                    }
+
                     VStack(alignment: .leading, spacing: 6) {
-                        if let cat = performer.category {
-                            Text(cat.uppercased())
-                                .font(.system(size: 10, weight: .black, design: .monospaced))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.neoPink)
-                                .border(Color.black, width: 1.5)
-                        }
+                        Text(category.uppercased())
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.neoPink)
+                            .border(Color.black, width: 1.5)
 
                         Text(performer.name)
                             .font(.system(size: 20, weight: .black, design: .monospaced))
@@ -1343,33 +1397,23 @@ struct PerformerDetailSheet: View {
                             .font(.system(size: 14, weight: .black, design: .monospaced))
 
                         if let urlStr = performer.socialUrl, let url = URL(string: urlStr) {
-                            Button {
+                            DetailContactRow(icon: "globe", value: performer.socialHandle ?? urlStr) {
                                 UIApplication.shared.open(url)
-                            } label: {
-                                HStack {
-                                    Image(systemName: "globe")
-                                    Text(performer.socialHandle ?? urlStr)
-                                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                        .lineLimit(1)
-                                    Spacer()
-                                }
-                                .padding(12)
-                                .background(Color.neoBackground)
-                                .border(Color.black, width: 2)
                             }
-                            .buttonStyle(.plain)
                         }
 
                         if let contact = performer.contactInfo, !contact.isEmpty {
-                            HStack {
-                                Image(systemName: "info.circle.fill")
-                                Text(contact)
-                                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                Spacer()
+                            let parts = contact.split(separator: "|").map { String($0).trimmingCharacters(in: .whitespaces) }
+                            ForEach(parts, id: \.self) { part in
+                                let icon = part.contains("@") ? "envelope.fill" : (part.contains("http") ? "globe" : "info.circle.fill")
+                                DetailContactRow(icon: icon, value: part) {
+                                    if part.contains("http"), let url = URL(string: part) {
+                                        UIApplication.shared.open(url)
+                                    } else if part.contains("@"), let url = URL(string: "mailto:\(part)") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                }
                             }
-                            .padding(12)
-                            .background(Color.neoBackground)
-                            .border(Color.black, width: 2)
                         }
                     }
                 }
