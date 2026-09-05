@@ -11,6 +11,31 @@ extension Color {
     static let neoBlue = Color(red: 0.34, green: 0.73, blue: 1.0)    // #57BAFF
     static let neoWhite = Color(red: 1.0, green: 1.0, blue: 1.0)
     static let neoBackground = Color(red: 0.96, green: 0.96, blue: 0.96)
+
+    // Hex Color Initializer for JSON background parity
+    init(hex: String?) {
+        guard let hex = hex, !hex.isEmpty else {
+            self = .white
+            return
+        }
+        let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: cleaned).scanHexInt64(&int)
+        let r, g, b: UInt64
+        switch cleaned.count {
+        case 6: // RGB
+            r = (int >> 16) & 0xFF
+            g = (int >> 8) & 0xFF
+            b = int & 0xFF
+            self.init(
+                red: Double(r) / 255,
+                green: Double(g) / 255,
+                blue: Double(b) / 255
+            )
+        default:
+            self = .white
+        }
+    }
 }
 
 // MARK: - Helper to Generate Asset Names (Android Parity)
@@ -266,36 +291,9 @@ enum DataLoader {
     }
 }
 
-// MARK: - Favorites Store
-final class FavoritesStore: ObservableObject {
-    @Published var ids: Set<String>
-    private let key = "favorite_ids"
-
-    init() {
-        if let saved = UserDefaults.standard.array(forKey: key) as? [String] {
-            ids = Set(saved)
-        } else {
-            ids = []
-        }
-    }
-
-    func toggle(_ id: String) {
-        var current = ids
-        if current.contains(id) { current.remove(id) } else { current.insert(id) }
-        ids = current
-        UserDefaults.standard.set(Array(current), forKey: key)
-        
-        Analytics.logEvent("vendor_favorite_toggle", parameters: [
-            "vendor_name": id as NSObject,
-            "is_favorite": ids.contains(id) as NSObject
-        ])
-    }
-}
-
 // MARK: - Root Scaffold Shell
 struct ContentView: View {
     @State private var eventData: EventData? = DataLoader.loadEventData()
-    @StateObject private var favorites = FavoritesStore()
     @State private var currentTab = 0
 
     var body: some View {
@@ -356,7 +354,7 @@ struct ContentView: View {
                     EntertainmentView(eventData: eventData)
                         .onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "events"]) }
                 case 3:
-                    VendorsScreen(eventData: eventData, favorites: favorites)
+                    VendorsScreen(eventData: eventData)
                         .onAppear { Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: "vendors"]) }
                 default:
                     HomeScreen(eventData: eventData)
@@ -472,7 +470,6 @@ struct FullScreenImageViewer: View {
     }
 }
 
-// Helper wrapper for string sheet presentation
 struct IdentifiableString: Identifiable {
     let id: String
 }
@@ -482,6 +479,7 @@ struct HomeScreen: View {
     let eventData: EventData?
     @State private var isWelcomeExpanded = false
     @State private var fullScreenImage: String? = nil
+    @State private var expandedFaqIds: Set<UUID> = []
     
     @State private var carouselImages: [String] = {
         let explicitNames = [
@@ -548,6 +546,7 @@ struct HomeScreen: View {
                     }
                 }
 
+                // WELCOME CARD
                 NeoCard(backgroundColor: .neoWhite) {
                     Button {
                         withAnimation { isWelcomeExpanded.toggle() }
@@ -567,11 +566,10 @@ struct HomeScreen: View {
                     }
                     .buttonStyle(.plain)
 
-                    Text("Welcome to Hops in the Hangar, your Craft Beer & Airshow event app! Explore a lineup of vendors and sponsors, discover detailed venue information, and enjoy exciting entertainment.")
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.9))
-
                     if isWelcomeExpanded {
+                        Text("Welcome to Hops in the Hangar, your Craft Beer & Airshow event app! Explore a lineup of vendors and sponsors, discover detailed venue information, and enjoy exciting entertainment.")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.black.opacity(0.9))
                         Text("Craft beer, beverages, and aircraft come together to create not only a fun social event, but also an extremely unique community experience at the Middletown Regional Airport.")
                             .font(.system(size: 14, weight: .bold, design: .monospaced))
                             .foregroundStyle(.black.opacity(0.9))
@@ -581,20 +579,36 @@ struct HomeScreen: View {
                     }
                 }
 
-                NeoCard(backgroundColor: .neoPink) {
-                    Text("Hops 2026 Recap")
-                        .font(.system(size: 16, weight: .black, design: .monospaced))
+                // IN THE NEWS HEADER & RECAP CARD
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("IN THE NEWS")
+                        .font(.system(size: 18, weight: .black, design: .monospaced))
                         .foregroundStyle(.black)
+                        .padding(.horizontal, 4)
 
-                    Text("As featured on WLWT, Hops in the Hangar 2026 was a stellar celebration of craft beer and aviation at the Middletown Regional Airport.")
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.9))
+                    NeoCard(backgroundColor: .neoPink) {
+                        Text("Hops 2026 Recap")
+                            .font(.system(size: 16, weight: .black, design: .monospaced))
+                            .foregroundStyle(.black)
 
-                    if let url = URL(string: "https://www.wlwt.com/article/annual-hops-in-the-hangar-fundraiser-middletown-regional-airport/73466732") {
-                        Link("Watch the full news segment here.", destination: url)
-                            .font(.system(size: 13, weight: .black, design: .monospaced))
-                            .underline()
-                            .foregroundStyle(.blue)
+                        Text("As featured on WLWT, Hops in the Hangar 2026 was a stellar celebration of craft beer and aviation at the Middletown Regional Airport.")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.black.opacity(0.9))
+
+                        if let url = URL(string: "https://www.wlwt.com/article/annual-hops-in-the-hangar-fundraiser-middletown-regional-airport/73466732") {
+                            HStack(spacing: 0) {
+                                Text("Watch the full news segment ")
+                                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(.black.opacity(0.9))
+                                Link("here", destination: url)
+                                    .font(.system(size: 13, weight: .black, design: .monospaced))
+                                    .underline()
+                                    .foregroundStyle(.blue)
+                                Text(".")
+                                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(.black.opacity(0.9))
+                            }
+                        }
                     }
                 }
 
@@ -610,8 +624,6 @@ struct HomeScreen: View {
                             .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundStyle(.black.opacity(0.8))
 
-                        Divider().overlay(.black)
-
                         Text("Event Rules")
                             .font(.system(size: 14, weight: .black, design: .monospaced))
                         Text(info.rules)
@@ -620,6 +632,7 @@ struct HomeScreen: View {
                     }
                 }
 
+                // FAQ SECTION WITH [+] / [-] BUTTONS
                 if let faqs = eventData?.faq, !faqs.isEmpty {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("FAQ")
@@ -628,19 +641,42 @@ struct HomeScreen: View {
                             .padding(.horizontal, 4)
 
                         ForEach(faqs) { faq in
-                            DisclosureGroup {
-                                Text(faq.answer)
-                                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(.black.opacity(0.8))
-                                    .padding(.top, 6)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            } label: {
-                                Text(faq.question)
-                                    .font(.system(size: 14, weight: .black, design: .monospaced))
-                                    .foregroundStyle(.black)
-                                    .multilineTextAlignment(.leading)
+                            let isExpanded = expandedFaqIds.contains(faq.id)
+
+                            VStack(alignment: .leading, spacing: 0) {
+                                Button {
+                                    withAnimation {
+                                        if isExpanded {
+                                            expandedFaqIds.remove(faq.id)
+                                        } else {
+                                            expandedFaqIds.insert(faq.id)
+                                        }
+                                    }
+                                } label: {
+                                    HStack {
+                                        Text(faq.question)
+                                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                                            .foregroundStyle(.black)
+                                            .multilineTextAlignment(.leading)
+                                        Spacer()
+                                        Text(isExpanded ? " [-] " : " [+] ")
+                                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                                            .foregroundStyle(.black)
+                                            .padding(4)
+                                            .background(Color.neoYellow)
+                                            .border(Color.black, width: 2)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+
+                                if isExpanded {
+                                    Text(faq.answer)
+                                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                        .foregroundStyle(.black.opacity(0.8))
+                                        .padding(.top, 10)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
                             }
-                            .tint(.black)
                             .padding(14)
                             .background(
                                 ZStack {
@@ -682,7 +718,6 @@ struct HomeScreen: View {
                                 "Rahul Menon"
                             ]
 
-                            // Using LazyVGrid / flexible layout representation in SwiftUI
                             let columns = [GridItem(.adaptive(minimum: 100, maximum: 140), spacing: 8)]
                             LazyVGrid(columns: columns, spacing: 8) {
                                 ForEach(crew, id: \.self) { name in
@@ -773,19 +808,21 @@ struct SponsorsScreen: View {
                         NeoCard(backgroundColor: .neoWhite) {
                             HStack(alignment: .center, spacing: 14) {
                                 let resName = getResourceName(sponsor.name)
+                                let boxBg = Color(hex: sponsor.background)
+                                
                                 if let uiImage = UIImage(named: resName) {
                                     Image(uiImage: uiImage)
                                         .resizable()
                                         .scaledToFit()
                                         .frame(width: 52, height: 52)
-                                        .background(Color.white)
+                                        .background(boxBg)
                                         .clipShape(RoundedRectangle(cornerRadius: 6))
                                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                                 } else {
                                     Image(systemName: "star.fill")
                                         .font(.system(size: 20))
                                         .frame(width: 52, height: 52)
-                                        .background(Color.neoYellow)
+                                        .background(boxBg == .white ? Color.neoYellow : boxBg)
                                         .clipShape(RoundedRectangle(cornerRadius: 6))
                                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                                 }
@@ -837,12 +874,14 @@ struct SponsorDetailSheet: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 16) {
                     let resName = getResourceName(sponsor.name)
+                    let boxBg = Color(hex: sponsor.background)
+                    
                     if let uiImage = UIImage(named: resName) {
                         Image(uiImage: uiImage)
                             .resizable()
                             .scaledToFit()
                             .frame(width: 64, height: 64)
-                            .background(Color.white)
+                            .background(boxBg)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
                     }
@@ -947,7 +986,6 @@ struct SponsorDetailSheet: View {
 // MARK: - Vendors Screen
 struct VendorsScreen: View {
     let eventData: EventData?
-    @ObservedObject var favorites: FavoritesStore
     @State private var query = ""
     private let allCategories = ["Brewery", "Food Truck"]
     @State private var selectedCategories: Set<String> = ["Brewery", "Food Truck"]
@@ -992,19 +1030,21 @@ struct VendorsScreen: View {
                         NeoCard(backgroundColor: .neoWhite) {
                             HStack(alignment: .center, spacing: 14) {
                                 let resName = getResourceName(vendor.name)
+                                let boxBg = Color(hex: vendor.background)
+                                
                                 if let uiImage = UIImage(named: resName) {
                                     Image(uiImage: uiImage)
                                         .resizable()
                                         .scaledToFit()
                                         .frame(width: 52, height: 52)
-                                        .background(Color.white)
+                                        .background(boxBg)
                                         .clipShape(RoundedRectangle(cornerRadius: 6))
                                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                                 } else {
                                     Image(systemName: vendor.category == "Brewery" ? "wineglass" : "fork.knife")
                                         .font(.system(size: 20))
                                         .frame(width: 52, height: 52)
-                                        .background(vendor.category == "Brewery" ? Color.neoBlue : Color.neoPink)
+                                        .background(boxBg == .white ? (vendor.category == "Brewery" ? Color.neoBlue : Color.neoPink) : boxBg)
                                         .clipShape(RoundedRectangle(cornerRadius: 6))
                                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                                 }
@@ -1026,17 +1066,6 @@ struct VendorsScreen: View {
                                         .foregroundStyle(.black.opacity(0.8))
                                 }
                                 Spacer()
-
-                                Button {
-                                    favorites.toggle(vendor.name)
-                                } label: {
-                                    Image(systemName: favorites.ids.contains(vendor.name) ? "heart.fill" : "heart")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundStyle(.black)
-                                        .padding(10)
-                                        .background(favorites.ids.contains(vendor.name) ? Color.neoPink : Color.white)
-                                        .border(Color.black, width: 2)
-                                }
                             }
                         }
                         .onTapGesture {
@@ -1066,12 +1095,14 @@ struct VendorDetailSheet: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 16) {
                     let resName = getResourceName(vendor.name)
+                    let boxBg = Color(hex: vendor.background)
+                    
                     if let uiImage = UIImage(named: resName) {
                         Image(uiImage: uiImage)
                             .resizable()
                             .scaledToFit()
                             .frame(width: 64, height: 64)
-                            .background(Color.white)
+                            .background(boxBg)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
                     }
