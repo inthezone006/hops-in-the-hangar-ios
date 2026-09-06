@@ -592,7 +592,7 @@ struct HomeScreen: View {
                                 .font(.system(size: 14, weight: .black, design: .monospaced))
                                 .foregroundStyle(.black)
                                 .padding(4)
-                                .background(Color.neoYellow)
+                                .background(Color.white)
                                 .border(Color.black, width: 2)
                         }
                     }
@@ -644,23 +644,29 @@ struct HomeScreen: View {
                     }
                 }
 
+                // VENUE & LOGISTICS HEADER & CARD
                 if let info = eventData?.info {
-                    NeoCard(backgroundColor: .neoBlue) {
+                    VStack(alignment: .leading, spacing: 12) {
                         Text("VENUE & LOGISTICS")
-                            .font(.system(size: 16, weight: .black, design: .monospaced))
+                            .font(.system(size: 18, weight: .black, design: .monospaced))
                             .foregroundStyle(.black)
+                            .padding(.horizontal, 4)
 
-                        Text("Parking")
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
-                        Text(info.parking)
-                            .font(.system(size: 13, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.black.opacity(0.8))
+                        NeoCard(backgroundColor: .neoBlue) {
+                            Text("Parking")
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                            Text(info.parking)
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.black.opacity(0.8))
 
-                        Text("Event Rules")
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
-                        Text(info.rules)
-                            .font(.system(size: 13, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.black.opacity(0.8))
+                            Spacer().frame(height: 8)
+
+                            Text("Event Rules")
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                            Text(info.rules)
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.black.opacity(0.8))
+                        }
                     }
                 }
 
