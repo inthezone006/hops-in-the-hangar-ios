@@ -128,7 +128,7 @@ struct NeoButton<Content: View>: View {
                     }
                 }
 
-            HStack {
+            HStack(alignment: .center) {
                 content
             }
             .padding(14)
@@ -549,11 +549,8 @@ struct HomeScreen: View {
     @State private var fullScreenImage: String? = nil
     @State private var expandedFaqIds: Set<UUID> = []
     
-    // Dynamically scan for ANY asset starting with "carousel_" with robust wildcard/fallback matching
     @State private var carouselImages: [String] = {
         var foundImages: [String] = []
-        
-        // Scan numbers 1 to 50 (both single and double digit variants)
         for i in 1...50 {
             let variants = [
                 String(format: "carousel_%d", i),
@@ -566,28 +563,23 @@ struct HomeScreen: View {
                 }
             }
         }
-        
-        // Scan letters a to z
         for char in "abcdefghijklmnopqrstuvwxyz" {
             let name = "carousel_\(char)"
             if UIImage(named: name) != nil && !foundImages.contains(name) {
                 foundImages.append(name)
             }
         }
-        
-        // Fallback if none found dynamically
         if foundImages.isEmpty {
             foundImages = ["carousel_1", "carousel_2", "carousel_3"]
         }
-        
+
         let sortedCarousel = foundImages.sorted()
         let centerLogo = UIImage(named: "main_icon") != nil ? "main_icon" : (UIImage(named: "AppIcon") != nil ? "AppIcon" : "")
-        
-        // Split images equally on either side of the center icon
+
         let mid = sortedCarousel.count / 2
         let leftSide = Array(sortedCarousel[..<mid])
         let rightSide = Array(sortedCarousel[mid...])
-        
+
         var combined: [String] = []
         combined.append(contentsOf: leftSide)
         if !centerLogo.isEmpty {
@@ -838,20 +830,31 @@ struct HomeScreen: View {
 
                             let columns = [GridItem(.adaptive(minimum: 100, maximum: 140), spacing: 8)]
                             LazyVGrid(columns: columns, spacing: 8) {
-                                ForEach(crew, id: \.self) { name in
+                                ForEach(crew, id: \.self) { fullName in
+                                    let parts = fullName.split(separator: " ")
+                                    let firstName = parts.first.map(String.init) ?? ""
+                                    let lastName = parts.dropFirst().joined(separator: " ")
+
                                     ZStack {
                                         RoundedRectangle(cornerRadius: 8)
                                             .fill(Color.black)
-                                            .offset(x: 3, y: 3)
+                                            .offset(x: 2, y: 2)
 
-                                        Text(name)
-                                            .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                            .foregroundStyle(.black)
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 8)
-                                            .frame(maxWidth: .infinity)
-                                            .background(Color.white)
-                                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                                        VStack(spacing: 2) {
+                                            Text(firstName)
+                                                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                                .foregroundStyle(.black)
+                                            if !lastName.isEmpty {
+                                                Text(lastName)
+                                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                                    .foregroundStyle(.black)
+                                            }
+                                        }
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 8)
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color.white)
+                                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
                                     }
                                 }
                             }
@@ -860,12 +863,15 @@ struct HomeScreen: View {
                 }
                 .padding(.horizontal, 4)
 
-                // App Version Footer
+                // App Version Footer with extra bottom padding for smooth scrolling
                 if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-                    Text("v\(version)")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.gray)
-                        .padding(.top, 10)
+                    VStack(spacing: 4) {
+                        Text("v\(version)")
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.gray)
+                    }
+                    .padding(.top, 10)
+                    .padding(.bottom, 96)
                 }
             }
             .padding(16)
