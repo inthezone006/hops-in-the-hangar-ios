@@ -97,6 +97,46 @@ struct NeoCard<Content: View>: View {
     }
 }
 
+// MARK: - Reusable Neo-Brutalist Tactile Button Component
+struct NeoButton<Content: View>: View {
+    let backgroundColor: Color
+    let onClick: () -> Void
+    @ViewBuilder let content: Content
+
+    @State private var isPressed = false
+
+    var body: some View {
+        let shadowX: CGFloat = isPressed ? 2 : 5
+        let shadowY: CGFloat = isPressed ? 2 : 5
+        let transX: CGFloat = isPressed ? 3 : 0
+        let transY: CGFloat = isPressed ? 3 : 0
+
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.black)
+                .offset(x: shadowX, y: shadowY)
+
+            RoundedRectangle(cornerRadius: 8)
+                .fill(backgroundColor)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.1)) { isPressed = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation(.easeInOut(duration: 0.1)) { isPressed = false }
+                        onClick()
+                    }
+                }
+
+            HStack {
+                content
+            }
+            .padding(14)
+        }
+        .offset(x: transX, y: transY)
+    }
+}
+
 // MARK: - Neo-Brutalist Search Field Component
 struct NeoTextField: View {
     let placeholder: String
@@ -137,7 +177,7 @@ struct NeoTextField: View {
     }
 }
 
-// MARK: - Neo-Brutalist Multi-Selection Filter Sheet
+// MARK: - Neo-Brutalist Filter Sheet
 struct FilterSelectionSheet: View {
     let title: String
     let options: [String]
@@ -145,105 +185,101 @@ struct FilterSelectionSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                Color.neoYellow
-                Text(title)
-                    .font(.system(size: 16, weight: .black, design: .monospaced))
-                    .tracking(1)
-                    .foregroundStyle(.black)
-            }
-            .frame(height: 55)
-            .overlay(Rectangle().frame(height: 3).foregroundColor(.black), alignment: .bottom)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(spacing: 16) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.neoYellow)
+                            .frame(width: 64, height: 64)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                        Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                            .font(.system(size: 26))
+                            .foregroundColor(.black)
+                    }
 
-            ScrollView {
-                VStack(spacing: 14) {
-                    ForEach(options, id: \.self) { option in
-                        HStack {
-                            Text(option)
-                                .font(.system(size: 14, weight: .black, design: .monospaced))
-                                .foregroundStyle(.black)
-                            Spacer()
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("FILTER")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.neoPink)
+                            .border(Color.black, width: 1.5)
 
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(selectedOptions.contains(option) ? Color.neoYellow : Color.white)
-                                    .frame(width: 26, height: 26)
-                                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
+                        Text(title)
+                            .font(.system(size: 18, weight: .black, design: .monospaced))
+                            .foregroundStyle(.black)
+                    }
+                }
 
-                                if selectedOptions.contains(option) {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 12, weight: .black))
-                                        .foregroundStyle(.black)
+                NeoCard(backgroundColor: .neoWhite) {
+                    VStack(spacing: 12) {
+                        ForEach(options, id: \.self) { option in
+                            let isSelected = selectedOptions.contains(option)
+
+                            NeoButton(backgroundColor: .white, onClick: {
+                                if isSelected {
+                                    selectedOptions.remove(option)
+                                } else {
+                                    selectedOptions.insert(option)
                                 }
-                            }
-                        }
-                        .padding(14)
-                        .background(Color.white)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
-                        .shadow(color: .black, radius: 0, x: 3, y: 3)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if selectedOptions.contains(option) {
-                                selectedOptions.remove(option)
-                            } else {
-                                selectedOptions.insert(option)
+                            }) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(isSelected ? Color.neoYellow : Color.white)
+                                        .frame(width: 22, height: 22)
+                                        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
+
+                                    if isSelected {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 11, weight: .black))
+                                            .foregroundColor(.black)
+                                    }
+                                }
+
+                                Text(option)
+                                    .font(.system(size: 13, weight: .black, design: .monospaced))
+                                    .foregroundColor(.black)
+
+                                Spacer()
                             }
                         }
                     }
                 }
-                .padding(20)
-            }
-            .background(Color.neoBackground)
 
-            VStack(spacing: 0) {
-                Rectangle().fill(Color.black).frame(height: 3)
-                Button {
+                NeoButton(backgroundColor: .neoYellow, onClick: {
                     dismiss()
-                } label: {
+                }) {
                     Text("APPLY FILTERS")
                         .font(.system(size: 15, weight: .black, design: .monospaced))
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.neoYellow)
-                        .foregroundStyle(.black)
+                        .foregroundColor(.black)
                 }
-                .background(Color.neoYellow)
+                .padding(.top, 10)
             }
+            .padding(24)
         }
         .background(Color.neoBackground)
     }
 }
 
-// MARK: - Reusable Contact Row Component for Sheets
+// MARK: - Reusable Contact Row Component for Sheets with Press Animation
 struct DetailContactRow: View {
     let icon: String
     let value: String
     let onClick: () -> Void
 
     var body: some View {
-        Button(action: onClick) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.black)
-                    .offset(x: 2, y: 2)
-
-                HStack(spacing: 12) {
-                    Image(systemName: icon)
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.black)
-                    Text(value)
-                        .font(.system(size: 13, weight: .black, design: .monospaced))
-                        .foregroundColor(.black)
-                        .lineLimit(1)
-                    Spacer()
-                }
-                .padding(12)
-                .background(Color.white)
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
-            }
+        NeoButton(backgroundColor: .white, onClick: onClick) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundColor(.black)
+            Text(value)
+                .font(.system(size: 13, weight: .black, design: .monospaced))
+                .foregroundColor(.black)
+                .lineLimit(1)
+            Spacer()
         }
-        .buttonStyle(.plain)
     }
 }
 
@@ -513,68 +549,112 @@ struct HomeScreen: View {
     @State private var fullScreenImage: String? = nil
     @State private var expandedFaqIds: Set<UUID> = []
     
+    // Dynamically scan for ANY asset starting with "carousel_" with robust wildcard/fallback matching
     @State private var carouselImages: [String] = {
-        let explicitNames = [
-            "carousel_1", "carousel_2", "carousel_3", "carousel_4", "carousel_5",
-            "carousel_6", "carousel_7", "carousel_8", "carousel_9", "carousel_10",
-            "carousel_11", "carousel_12", "carousel_13", "carousel_14", "carousel_15"
-        ]
-        let valid = explicitNames.filter { UIImage(named: $0) != nil }
-        if valid.isEmpty {
-            return ["main_icon", "AppIcon"]
+        var foundImages: [String] = []
+        
+        // Scan numbers 1 to 50 (both single and double digit variants)
+        for i in 1...50 {
+            let variants = [
+                String(format: "carousel_%d", i),
+                String(format: "carousel_%02d", i),
+                String(format: "carousel%d", i)
+            ]
+            for variant in variants {
+                if UIImage(named: variant) != nil && !foundImages.contains(variant) {
+                    foundImages.append(variant)
+                }
+            }
         }
-        return valid.sorted()
+        
+        // Scan letters a to z
+        for char in "abcdefghijklmnopqrstuvwxyz" {
+            let name = "carousel_\(char)"
+            if UIImage(named: name) != nil && !foundImages.contains(name) {
+                foundImages.append(name)
+            }
+        }
+        
+        // Fallback if none found dynamically
+        if foundImages.isEmpty {
+            foundImages = ["carousel_1", "carousel_2", "carousel_3"]
+        }
+        
+        let sortedCarousel = foundImages.sorted()
+        let centerLogo = UIImage(named: "main_icon") != nil ? "main_icon" : (UIImage(named: "AppIcon") != nil ? "AppIcon" : "")
+        
+        // Split images equally on either side of the center icon
+        let mid = sortedCarousel.count / 2
+        let leftSide = Array(sortedCarousel[..<mid])
+        let rightSide = Array(sortedCarousel[mid...])
+        
+        var combined: [String] = []
+        combined.append(contentsOf: leftSide)
+        if !centerLogo.isEmpty {
+            combined.append(centerLogo)
+        }
+        combined.append(contentsOf: rightSide)
+        return combined
     }()
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 if !carouselImages.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-                            let middleIndex = carouselImages.count / 2
+                    ScrollViewReader { proxy in
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                let middleIndex = carouselImages.count / 2
 
-                            ForEach(Array(carouselImages.enumerated()), id: \.offset) { index, imageName in
-                                let isCenter = (index == middleIndex)
+                                ForEach(Array(carouselImages.enumerated()), id: \.offset) { index, imageName in
+                                    let isCenter = (imageName == "main_icon" || imageName == "AppIcon" || index == middleIndex)
 
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.black)
-                                        .offset(x: 4, y: 4)
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.black)
+                                            .offset(x: 4, y: 4)
 
-                                    if let uiImg = UIImage(named: imageName) {
-                                        Image(uiImage: uiImg)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 240, height: 240)
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
-                                    } else {
-                                        Image(systemName: "airplane.circle.fill")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 80, height: 80)
-                                            .foregroundStyle(Color.neoYellow)
-                                            .frame(width: 240, height: 240)
-                                            .background(Color.white)
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
-                                    }
-                                }
-                                .padding(.vertical, 6)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    if isCenter {
-                                        if let url = URL(string: "https://hopsinthehangar.com") {
-                                            UIApplication.shared.open(url)
+                                        if let uiImg = UIImage(named: imageName) {
+                                            Image(uiImage: uiImg)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 240, height: 240)
+                                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
+                                        } else {
+                                            Image(systemName: "airplane.circle.fill")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 80, height: 80)
+                                                .foregroundStyle(Color.neoYellow)
+                                                .frame(width: 240, height: 240)
+                                                .background(Color.white)
+                                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
                                         }
-                                    } else {
-                                        fullScreenImage = imageName
+                                    }
+                                    .padding(.vertical, 6)
+                                    .contentShape(Rectangle())
+                                    .id(index)
+                                    .onTapGesture {
+                                        if isCenter {
+                                            if let url = URL(string: "https://hopsinthehangar.com") {
+                                                UIApplication.shared.open(url)
+                                            }
+                                        } else {
+                                            fullScreenImage = imageName
+                                        }
                                     }
                                 }
                             }
+                            .padding(.horizontal, 16)
                         }
-                        .padding(.horizontal, 16)
+                        .onAppear {
+                            let middleIndex = carouselImages.count / 2
+                            DispatchQueue.main.async {
+                                proxy.scrollTo(middleIndex, anchor: .center)
+                            }
+                        }
                     }
                 }
 
@@ -823,22 +903,14 @@ struct SponsorsScreen: View {
                         NeoTextField(placeholder: "SEARCH SPONSORS...", text: $query)
                             .frame(maxWidth: .infinity)
 
-                        Button {
+                        NeoButton(backgroundColor: .neoYellow, onClick: {
                             isFilterPresented = true
-                        } label: {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.black)
-                                    .offset(x: 3, y: 3)
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.neoYellow)
-                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
-                                Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                                    .font(.title3)
-                                    .foregroundStyle(.black)
-                            }
-                            .frame(width: 52, height: 52)
+                        }) {
+                            Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(.black)
                         }
+                        .frame(width: 52, height: 52)
                     }
                     .padding(.bottom, 4)
 
@@ -997,17 +1069,13 @@ struct SponsorDetailSheet: View {
                     }
                 }
 
-                Button {
+                NeoButton(backgroundColor: .neoYellow, onClick: {
                     dismiss()
-                } label: {
+                }) {
                     Text("CLOSE")
                         .font(.system(size: 15, weight: .black, design: .monospaced))
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.neoYellow)
-                        .foregroundStyle(.black)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
-                        .shadow(color: .black, radius: 0, x: 3, y: 3)
+                        .foregroundColor(.black)
                 }
                 .padding(.top, 10)
             }
@@ -1041,22 +1109,14 @@ struct VendorsScreen: View {
                         NeoTextField(placeholder: "SEARCH VENDORS...", text: $query)
                             .frame(maxWidth: .infinity)
 
-                        Button {
+                        NeoButton(backgroundColor: .neoYellow, onClick: {
                             isFilterPresented = true
-                        } label: {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.black)
-                                    .offset(x: 3, y: 3)
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.neoYellow)
-                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
-                                Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                                    .font(.title3)
-                                    .foregroundStyle(.black)
-                            }
-                            .frame(width: 52, height: 52)
+                        }) {
+                            Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(.black)
                         }
+                        .frame(width: 52, height: 52)
                     }
                     .padding(.bottom, 4)
 
@@ -1195,17 +1255,13 @@ struct VendorDetailSheet: View {
                     }
                 }
 
-                Button {
+                NeoButton(backgroundColor: .neoYellow, onClick: {
                     dismiss()
-                } label: {
+                }) {
                     Text("CLOSE")
                         .font(.system(size: 15, weight: .black, design: .monospaced))
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.neoYellow)
-                        .foregroundStyle(.black)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
-                        .shadow(color: .black, radius: 0, x: 3, y: 3)
+                        .foregroundColor(.black)
                 }
                 .padding(.top, 10)
             }
@@ -1424,17 +1480,13 @@ struct PerformerDetailSheet: View {
                     }
                 }
 
-                Button {
+                NeoButton(backgroundColor: .neoYellow, onClick: {
                     dismiss()
-                } label: {
+                }) {
                     Text("CLOSE")
                         .font(.system(size: 15, weight: .black, design: .monospaced))
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.neoYellow)
-                        .foregroundStyle(.black)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
-                        .shadow(color: .black, radius: 0, x: 3, y: 3)
+                        .foregroundColor(.black)
                 }
                 .padding(.top, 10)
             }
