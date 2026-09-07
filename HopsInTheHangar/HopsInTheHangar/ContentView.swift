@@ -176,62 +176,41 @@ struct FilterSelectionSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 16) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.neoYellow)
-                            .frame(width: 64, height: 64)
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
-                        Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                            .font(.system(size: 26))
-                            .foregroundColor(.black)
-                    }
+                // Filter Title without icon and pink badge box
+                Text(title)
+                    .font(.system(size: 18, weight: .black, design: .monospaced))
+                    .foregroundStyle(.black)
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("FILTER")
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.neoPink)
-                            .border(Color.black, width: 1.5)
+                // Outer card container removed so checklist options sit directly in the sheet
+                VStack(spacing: 12) {
+                    ForEach(options, id: \.self) { option in
+                        let isSelected = selectedOptions.contains(option)
 
-                        Text(title)
-                            .font(.system(size: 18, weight: .black, design: .monospaced))
-                            .foregroundStyle(.black)
-                    }
-                }
-
-                NeoCard(backgroundColor: .neoWhite) {
-                    VStack(spacing: 12) {
-                        ForEach(options, id: \.self) { option in
-                            let isSelected = selectedOptions.contains(option)
-
-                            NeoButton(backgroundColor: .white, onClick: {
-                                if isSelected {
-                                    selectedOptions.remove(option)
-                                } else {
-                                    selectedOptions.insert(option)
-                                }
-                            }) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .fill(isSelected ? Color.neoYellow : Color.white)
-                                        .frame(width: 22, height: 22)
-                                        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
-
-                                    if isSelected {
-                                        Image(systemName: "checkmark")
-                                            .font(.system(size: 11, weight: .black))
-                                            .foregroundColor(.black)
-                                    }
-                                }
-
-                                Text(option)
-                                    .font(.system(size: 13, weight: .black, design: .monospaced))
-                                    .foregroundColor(.black)
-
-                                Spacer()
+                        NeoButton(backgroundColor: .white, onClick: {
+                            if isSelected {
+                                selectedOptions.remove(option)
+                            } else {
+                                selectedOptions.insert(option)
                             }
+                        }) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(isSelected ? Color.neoYellow : Color.white)
+                                    .frame(width: 22, height: 22)
+                                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
+
+                                if isSelected {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 11, weight: .black))
+                                        .foregroundColor(.black)
+                                }
+                            }
+
+                            Text(option)
+                                .font(.system(size: 13, weight: .black, design: .monospaced))
+                                .foregroundColor(.black)
+
+                            Spacer()
                         }
                     }
                 }
@@ -493,33 +472,73 @@ struct BottomNavItem: View {
     }
 }
 
-// MARK: - Full Screen Image Viewer Sheet
+// MARK: - Full Screen Image Viewer Sheet with Zoom, Pan, and Tap to Exit
 struct FullScreenImageViewer: View {
     let imageName: String
     @Environment(\.dismiss) private var dismiss
 
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
             Color.black.ignoresSafeArea()
 
             if let uiImg = UIImage(named: imageName) {
                 Image(uiImage: uiImg)
                     .resizable()
                     .scaledToFit()
+                    .scaleEffect(scale)
+                    .offset(offset)
+                    .gesture(
+                        SimultaneousGesture(
+                            MagnificationGesture()
+                                .onChanged { value in
+                                    let delta = value / lastScale
+                                    lastScale = value
+                                    scale = min(max(scale * delta, 1.0), 5.0)
+                                }
+                                .onEnded { _ in
+                                    lastScale = 1.0
+                                    if scale <= 1.0 {
+                                        withAnimation {
+                                            scale = 1.0
+                                            offset = .zero
+                                        }
+                                    }
+                                },
+                            DragGesture()
+                                .onChanged { value in
+                                    if scale > 1.0 {
+                                        offset = CGSize(
+                                            width: lastOffset.width + value.translation.width,
+                                            height: lastOffset.height + value.translation.height
+                                        )
+                                    }
+                                }
+                                .onEnded { _ in
+                                    lastOffset = offset
+                                }
+                        )
+                    )
+                    .simultaneousGesture(
+                        TapGesture(count: 1)
+                            .onEnded {
+                                if scale <= 1.0 {
+                                    dismiss()
+                                }
+                            }
+                    )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Text("Image not found")
                     .foregroundColor(.white)
                     .font(.system(size: 16, weight: .bold, design: .monospaced))
-            }
-
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(.white)
-                    .padding(20)
+                    .onTapGesture {
+                        dismiss()
+                    }
             }
         }
     }
@@ -1408,7 +1427,6 @@ struct PerformerDetailSheet: View {
 
     var body: some View {
         ScrollView {
-            // Updated alignment to left-aligned inside this detail sheet
             VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 16) {
                     ZStack {
@@ -1436,7 +1454,6 @@ struct PerformerDetailSheet: View {
                 }
 
                 NeoCard(backgroundColor: .neoWhite) {
-                    // Left-aligned content container
                     VStack(alignment: .leading, spacing: 4) {
                         Text("ROLE & DETAILS")
                             .font(.system(size: 14, design: .monospaced))
@@ -1456,7 +1473,6 @@ struct PerformerDetailSheet: View {
 
                 if !performer.socialUrl.isNilOrBlank || !performer.contactInfo.isNilOrBlank {
                     NeoCard(backgroundColor: .neoWhite) {
-                        // Left-aligned content container
                         VStack(alignment: .leading, spacing: 8) {
                             Text("CONNECT & CONTACT")
                                 .font(.system(size: 14, design: .monospaced))
