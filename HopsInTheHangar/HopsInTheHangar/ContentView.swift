@@ -798,11 +798,16 @@ struct HomeScreen: View {
                                 .buttonStyle(.plain)
 
                                 if isExpanded {
-                                    Text(faq.answer)
-                                        .font(.system(size: 13, design: .monospaced))
-                                        .foregroundStyle(.black.opacity(0.8))
-                                        .padding(.top, 10)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        Text(faq.answer)
+                                            .font(.system(size: 13, design: .monospaced))
+                                            .foregroundStyle(.black.opacity(0.9))
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .padding(16)
+                                    .background(Color.white)
+                                    .overlay(RoundedRectangle(cornerRadius: 2).stroke(Color.black, lineWidth: 2))
+                                    .padding(.top, 12)
                                 }
                             }
                             .padding(14)
