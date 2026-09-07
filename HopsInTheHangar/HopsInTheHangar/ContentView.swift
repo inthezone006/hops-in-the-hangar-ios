@@ -361,9 +361,13 @@ struct ContentView: View {
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
                             .background(Color.neoPink)
-                            .foregroundStyle(.black)
-                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 2))
-                            .shadow(color: .black, radius: 0, x: 2, y: 2)
+                            .foregroundColor(.black)
+                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 3))
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.black)
+                                    .offset(x: 3, y: 3)
+                            )
                         }
                     }
                     .padding(.horizontal, 16)
