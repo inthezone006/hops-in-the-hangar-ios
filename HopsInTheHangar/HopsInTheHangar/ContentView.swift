@@ -550,35 +550,33 @@ struct HomeScreen: View {
     @State private var expandedFaqIds: Set<UUID> = []
     
     @State private var carouselImages: [String] = {
-        var foundImages: [String] = []
-        for i in 1...50 {
-            let variants = [
-                String(format: "carousel_%d", i),
-                String(format: "carousel_%02d", i),
-                String(format: "carousel%d", i)
-            ]
-            for variant in variants {
-                if UIImage(named: variant) != nil && !foundImages.contains(variant) {
-                    foundImages.append(variant)
-                }
-            }
-        }
-        for char in "abcdefghijklmnopqrstuvwxyz" {
-            let name = "carousel_\(char)"
-            if UIImage(named: name) != nil && !foundImages.contains(name) {
-                foundImages.append(name)
-            }
-        }
-        if foundImages.isEmpty {
-            foundImages = ["carousel_1", "carousel_2", "carousel_3"]
-        }
-
-        let sortedCarousel = foundImages.sorted()
+        // List the exact names of your carousel image assets as they appear in Assets.xcassets (without file extensions)
+        let explicitCarousels = [
+            "carousel_20260822_184940",
+            "carousel_img_1291",
+            "carousel_img_1301",
+            "carousel_img_1307",
+            "carousel_img_1323",
+            "carousel_img_1393",
+            "carousel_img_1405",
+            "carousel_img_1406",
+            "carousel_img_1408",
+            "carousel_img_1409",
+            "carousel_img_1437",
+            "carousel_img_1444",
+            "carousel_img_1445",
+            "carousel_img_1447",
+            "carousel_img_2888"
+        ]
+        
+        // Verify which ones actually load properly, filtering out any missing assets
+        let foundImages = explicitCarousels.filter { UIImage(named: $0) != nil }
+        
         let centerLogo = UIImage(named: "main_icon") != nil ? "main_icon" : (UIImage(named: "AppIcon") != nil ? "AppIcon" : "")
 
-        let mid = sortedCarousel.count / 2
-        let leftSide = Array(sortedCarousel[..<mid])
-        let rightSide = Array(sortedCarousel[mid...])
+        let mid = foundImages.count / 2 + 1
+        let leftSide = Array(foundImages[..<mid])
+        let rightSide = Array(foundImages[mid...])
 
         var combined: [String] = []
         combined.append(contentsOf: leftSide)
@@ -586,7 +584,8 @@ struct HomeScreen: View {
             combined.append(centerLogo)
         }
         combined.append(contentsOf: rightSide)
-        return combined
+        
+        return combined.isEmpty ? ["carousel_1"] : combined
     }()
 
     var body: some View {
