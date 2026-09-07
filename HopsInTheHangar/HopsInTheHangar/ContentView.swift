@@ -12,7 +12,6 @@ extension Color {
     static let neoWhite = Color(red: 1.0, green: 1.0, blue: 1.0)
     static let neoBackground = Color(red: 0.96, green: 0.96, blue: 0.96)
 
-    // Hex Color Initializer for JSON background parity
     init(hex: String?) {
         guard let hex = hex, !hex.isEmpty else {
             self = .white
@@ -23,15 +22,11 @@ extension Color {
         Scanner(string: cleaned).scanHexInt64(&int)
         let r, g, b: UInt64
         switch cleaned.count {
-        case 6: // RGB
+        case 6:
             r = (int >> 16) & 0xFF
             g = (int >> 8) & 0xFF
             b = int & 0xFF
-            self.init(
-                red: Double(r) / 255,
-                green: Double(g) / 255,
-                blue: Double(b) / 255
-            )
+            self.init(red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255)
         default:
             self = .white
         }
@@ -73,10 +68,7 @@ struct NeoCard<Content: View>: View {
 
             RoundedRectangle(cornerRadius: 8)
                 .fill(backgroundColor)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.black, lineWidth: 3)
-                )
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
                 .contentShape(Rectangle())
                 .onTapGesture {
                     if let click = onClick {
@@ -106,8 +98,8 @@ struct NeoButton<Content: View>: View {
     @State private var isPressed = false
 
     var body: some View {
-        let shadowX: CGFloat = isPressed ? 2 : 5
-        let shadowY: CGFloat = isPressed ? 2 : 5
+        let shadowX: CGFloat = isPressed ? 1 : 4
+        let shadowY: CGFloat = isPressed ? 1 : 4
         let transX: CGFloat = isPressed ? 3 : 0
         let transY: CGFloat = isPressed ? 3 : 0
 
@@ -154,7 +146,7 @@ struct NeoTextField: View {
                     .foregroundStyle(.black)
 
                 TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.gray))
-                    .font(.system(size: 15, weight: .bold, design: .monospaced))
+                    .font(.system(size: 16, weight: .bold, design: .monospaced))
                     .foregroundColor(.black)
 
                 if !text.isEmpty {
@@ -169,15 +161,12 @@ struct NeoTextField: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(Color.white)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.black, lineWidth: 3)
-            )
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
         }
     }
 }
 
-// MARK: - Neo-Brutalist Filter Sheet
+// MARK: - Neo-Brutalist Filter Sheet Component
 struct FilterSelectionSheet: View {
     let title: String
     let options: [String]
@@ -263,7 +252,7 @@ struct FilterSelectionSheet: View {
     }
 }
 
-// MARK: - Reusable Contact Row Component for Sheets with Press Animation
+// MARK: - Reusable Contact Row Component
 struct DetailContactRow: View {
     let icon: String
     let value: String
@@ -402,9 +391,7 @@ struct ContentView: View {
                 }
                 .frame(height: 56)
                 
-                Rectangle()
-                    .fill(Color.black)
-                    .frame(height: 3)
+                Rectangle().fill(Color.black).frame(height: 3)
             }
             .background(Color.neoYellow)
             .zIndex(1)
@@ -433,23 +420,21 @@ struct ContentView: View {
 
             // Bottom App Bar
             VStack(spacing: 0) {
-                            Rectangle()
-                                .fill(Color.black)
-                                .frame(height: 3)
+                Rectangle().fill(Color.black).frame(height: 3)
 
-                            HStack(spacing: 12) {
-                                BottomNavItem(title: "HOME", icon: "house.fill", color: .neoYellow, index: 0, currentTab: $currentTab)
-                                BottomNavItem(title: "SPONSORS", icon: "star.fill", color: .neoPink, index: 1, currentTab: $currentTab)
-                                BottomNavItem(title: "EVENTS", icon: "list.bullet", color: .neoGreen, index: 2, currentTab: $currentTab)
-                                BottomNavItem(title: "VENDORS", icon: "cart.fill", color: .neoBlue, index: 3, currentTab: $currentTab)
-                            }
-                            .padding(.horizontal, 24) // Matched to Android's 24dp horizontal padding
-                            .padding(.top, 20)        // Pushes the buttons down a bit more
-                            .padding(.bottom, 2)
-                            .frame(height: 58)        // Shorter bottom nav bar height
-                            .background(Color.white)
-                        }
-                        .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 12) {
+                    BottomNavItem(title: "HOME", icon: "house.fill", color: .neoYellow, index: 0, currentTab: $currentTab)
+                    BottomNavItem(title: "SPONSORS", icon: "star.fill", color: .neoPink, index: 1, currentTab: $currentTab)
+                    BottomNavItem(title: "EVENTS", icon: "list.bullet", color: .neoGreen, index: 2, currentTab: $currentTab)
+                    BottomNavItem(title: "VENDORS", icon: "cart.fill", color: .neoBlue, index: 3, currentTab: $currentTab)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 20)
+                .padding(.bottom, 2)
+                .frame(height: 58)
+                .background(Color.white)
+            }
+            .fixedSize(horizontal: false, vertical: true)
         }
         .ignoresSafeArea(.keyboard)
         .background(Color.neoBackground)
@@ -487,9 +472,7 @@ struct BottomNavItem: View {
                 .fill(isSelected ? color : Color.neoWhite)
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    currentTab = index
-                }
+                .onTapGesture { currentTab = index }
 
             VStack(spacing: 2) {
                 Image(systemName: icon)
@@ -497,15 +480,15 @@ struct BottomNavItem: View {
                     .frame(height: 22)
                 
                 Text(title)
-                    .font(.system(size: 21, weight: .black, design: .monospaced))
+                    .font(.system(size: 9, weight: .black, design: .monospaced))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.5) // Allows text to scale down slightly if needed instead of wrapping
+                    .minimumScaleFactor(0.5)
             }
             .foregroundColor(.black)
             .padding(.horizontal, 2)
             .padding(.vertical, 8)
         }
-        .frame(maxWidth: .infinity, minHeight: 46, maxHeight: 46) // Explicitly constrains all buttons to the same max height
+        .frame(maxWidth: .infinity, minHeight: 46, maxHeight: 46)
         .offset(x: isSelected ? 1 : 0, y: isSelected ? 1 : 0)
     }
 }
@@ -542,9 +525,7 @@ struct FullScreenImageViewer: View {
     }
 }
 
-struct IdentifiableString: Identifiable {
-    let id: String
-}
+struct IdentifiableString: Identifiable { let id: String }
 
 // MARK: - Home Screen
 struct HomeScreen: View {
@@ -554,28 +535,13 @@ struct HomeScreen: View {
     @State private var expandedFaqIds: Set<UUID> = []
     
     @State private var carouselImages: [String] = {
-        // List the exact names of your carousel image assets as they appear in Assets.xcassets (without file extensions)
         let explicitCarousels = [
-            "carousel_20260822_184940",
-            "carousel_img_1291",
-            "carousel_img_1301",
-            "carousel_img_1307",
-            "carousel_img_1323",
-            "carousel_img_1393",
-            "carousel_img_1405",
-            "carousel_img_1406",
-            "carousel_img_1408",
-            "carousel_img_1409",
-            "carousel_img_1437",
-            "carousel_img_1444",
-            "carousel_img_1445",
-            "carousel_img_1447",
-            "carousel_img_2888"
+            "carousel_20260822_184940", "carousel_img_1291", "carousel_img_1301", "carousel_img_1307",
+            "carousel_img_1323", "carousel_img_1393", "carousel_img_1405", "carousel_img_1406",
+            "carousel_img_1408", "carousel_img_1409", "carousel_img_1437", "carousel_img_1444",
+            "carousel_img_1445", "carousel_img_1447", "carousel_img_2888"
         ]
-        
-        // Verify which ones actually load properly, filtering out any missing assets
         let foundImages = explicitCarousels.filter { UIImage(named: $0) != nil }
-        
         let centerLogo = UIImage(named: "main_icon") != nil ? "main_icon" : (UIImage(named: "AppIcon") != nil ? "AppIcon" : "")
 
         let mid = foundImages.count / 2 + 1
@@ -584,9 +550,7 @@ struct HomeScreen: View {
 
         var combined: [String] = []
         combined.append(contentsOf: leftSide)
-        if !centerLogo.isEmpty {
-            combined.append(centerLogo)
-        }
+        if !centerLogo.isEmpty { combined.append(centerLogo) }
         combined.append(contentsOf: rightSide)
         
         return combined.isEmpty ? ["carousel_1"] : combined
@@ -646,9 +610,7 @@ struct HomeScreen: View {
                         }
                         .onAppear {
                             let middleIndex = carouselImages.count / 2
-                            DispatchQueue.main.async {
-                                proxy.scrollTo(middleIndex, anchor: .center)
-                            }
+                            DispatchQueue.main.async { proxy.scrollTo(middleIndex, anchor: .center) }
                         }
                     }
                 }
@@ -660,11 +622,11 @@ struct HomeScreen: View {
                     } label: {
                         HStack {
                             Text("WELCOME TO THE SHOW")
-                                .font(.system(size: 16, weight: .black, design: .monospaced))
+                                .font(.system(size: 16, design: .monospaced))
                                 .foregroundStyle(.black)
                             Spacer()
                             Text(isWelcomeExpanded ? " [-] " : " [+] ")
-                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                                .font(.system(size: 14, design: .monospaced))
                                 .foregroundStyle(.black)
                                 .padding(4)
                                 .background(Color.white)
@@ -674,14 +636,14 @@ struct HomeScreen: View {
                     .buttonStyle(.plain)
 
                     if isWelcomeExpanded {
-                        Text("Welcome to Hops in the Hangar, your Craft Beer & Airshow event app! Explore a lineup of vendors and sponsors, discover detailed venue information, and enjoy exciting entertainment.")
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        Text("Welcome to Hops in the Hangar, your Craft Beer & Airshow event app! Explore a lineup of vendors and sponsors, discover detailed venue information, find the best hotels nearby, enjoy exciting entertainment, and get to know the featured airshow performers.")
+                            .font(.system(size: 14, design: .monospaced))
                             .foregroundStyle(.black.opacity(0.9))
-                        Text("Craft beer, beverages, and aircraft come together to create not only a fun social event, but also an extremely unique community experience at the Middletown Regional Airport.")
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        Text("Craft beer, beverages, and aircraft come together to create not only a fun social event, but also an extremely unique community experience. Hops in the Hangar celebrates aviation, local businesses, and great craft beverages while bringing people together for an unforgettable evening at the Middletown Regional Airport.")
+                            .font(.system(size: 14, design: .monospaced))
                             .foregroundStyle(.black.opacity(0.9))
-                        Text("Whether you're here for the thrilling air show performances or the incredible selection of breweries, this app will help you make the most of your experience.")
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        Text("Whether you're here for the thrilling air show performances, the incredible selection of breweries and beverage vendors, or simply to enjoy time with friends and family, this app will help you make the most of your experience. Stay connected with schedules, updates, event maps, and everything you need for an amazing experience at Hops in the Hangar 2026.")
+                            .font(.system(size: 14, design: .monospaced))
                             .foregroundStyle(.black.opacity(0.9))
                     }
                 }
@@ -689,31 +651,31 @@ struct HomeScreen: View {
                 // IN THE NEWS HEADER & RECAP CARD
                 VStack(alignment: .leading, spacing: 12) {
                     Text("IN THE NEWS")
-                        .font(.system(size: 18, weight: .black, design: .monospaced))
+                        .font(.system(size: 18, design: .monospaced))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 4)
 
                     NeoCard(backgroundColor: .neoPink) {
                         Text("Hops 2026 Recap")
-                            .font(.system(size: 16, weight: .black, design: .monospaced))
+                            .font(.system(size: 16, weight: .bold, design: .monospaced))
                             .foregroundStyle(.black)
 
-                        Text("As featured on WLWT, Hops in the Hangar 2026 was a stellar celebration of craft beer and aviation at the Middletown Regional Airport.")
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        Text("As featured on WLWT, Hops in the Hangar 2026 was a stellar celebration of craft beer and aviation. Saturday, August 22nd at the Middletown Regional Airport proved to be a perfect backdrop for a fun night where specialty beer enthusiasts and plane lovers combined their passions into one unforgettable experience.")
+                            .font(.system(size: 14, design: .monospaced))
                             .foregroundStyle(.black.opacity(0.9))
 
-                        if let url = URL(string: "https://www.wlwt.com/article/annual-hops-in-the-hangar-fundraiser-middletown-regional-airport/73466732") {
+                        if let url = URL(string: "https://www.wlwt.com/article/annual-hops-in-the-hangar-fundraiser-middletown-regional-airport/73466732?utm_campaign=snd-autopilot&fbclid=IwY2xjawUANr9wZG9mBWV4dG4DYWVtAjEwAGJyaWQRMVlwcXpNeXpWYUNFWWhGR29zcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEe-doI-qUEQTUaFejKpMXCGEVudnU0I_GSflwfU8n9y6sPHQnYEw02Nxthr-I_aem_yoV-Z7vcQlzoQCkJhKZvYQ") {
                             HStack(spacing: 0) {
                                 Text("Watch the full news segment ")
-                                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(.black.opacity(0.9))
+                                    .font(.system(size: 13, design: .monospaced))
+                                    .foregroundStyle(.black.opacity(0.7))
                                 Link("here", destination: url)
                                     .font(.system(size: 13, weight: .black, design: .monospaced))
                                     .underline()
                                     .foregroundStyle(.blue)
                                 Text(".")
-                                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(.black.opacity(0.9))
+                                    .font(.system(size: 13, design: .monospaced))
+                                    .foregroundStyle(.black.opacity(0.7))
                             }
                         }
                     }
@@ -723,33 +685,35 @@ struct HomeScreen: View {
                 if let info = eventData?.info {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("VENUE & LOGISTICS")
-                            .font(.system(size: 18, weight: .black, design: .monospaced))
+                            .font(.system(size: 18, design: .monospaced))
                             .foregroundStyle(.black)
                             .padding(.horizontal, 4)
 
                         NeoCard(backgroundColor: .neoBlue) {
                             Text("Parking")
-                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.black)
                             Text(info.parking)
-                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .font(.system(size: 13, design: .monospaced))
                                 .foregroundStyle(.black.opacity(0.8))
 
                             Spacer().frame(height: 8)
 
                             Text("Event Rules")
-                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.black)
                             Text(info.rules)
-                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .font(.system(size: 13, design: .monospaced))
                                 .foregroundStyle(.black.opacity(0.8))
                         }
                     }
                 }
 
-                // FAQ SECTION WITH [+] / [-] BUTTONS
+                // FAQ SECTION
                 if let faqs = eventData?.faq, !faqs.isEmpty {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("FAQ")
-                            .font(.system(size: 18, weight: .black, design: .monospaced))
+                            .font(.system(size: 18, design: .monospaced))
                             .foregroundStyle(.black)
                             .padding(.horizontal, 4)
 
@@ -759,21 +723,18 @@ struct HomeScreen: View {
                             VStack(alignment: .leading, spacing: 0) {
                                 Button {
                                     withAnimation {
-                                        if isExpanded {
-                                            expandedFaqIds.remove(faq.id)
-                                        } else {
-                                            expandedFaqIds.insert(faq.id)
-                                        }
+                                        if isExpanded { expandedFaqIds.remove(faq.id) }
+                                        else { expandedFaqIds.insert(faq.id) }
                                     }
                                 } label: {
                                     HStack {
                                         Text(faq.question)
-                                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                                            .font(.system(size: 14, design: .monospaced))
                                             .foregroundStyle(.black)
                                             .multilineTextAlignment(.leading)
                                         Spacer()
                                         Text(isExpanded ? " [-] " : " [+] ")
-                                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                                            .font(.system(size: 14, design: .monospaced))
                                             .foregroundStyle(.black)
                                             .padding(4)
                                             .background(Color.white)
@@ -784,7 +745,7 @@ struct HomeScreen: View {
 
                                 if isExpanded {
                                     Text(faq.answer)
-                                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                        .font(.system(size: 13, design: .monospaced))
                                         .foregroundStyle(.black.opacity(0.8))
                                         .padding(.top, 10)
                                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -793,12 +754,8 @@ struct HomeScreen: View {
                             .padding(14)
                             .background(
                                 ZStack {
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.black)
-                                        .offset(x: 3, y: 3)
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.neoYellow)
-                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2.5))
+                                    RoundedRectangle(cornerRadius: 6).fill(Color.black).offset(x: 3, y: 3)
+                                    RoundedRectangle(cornerRadius: 6).fill(Color.neoYellow).overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2.5))
                                 }
                             )
                         }
@@ -806,21 +763,21 @@ struct HomeScreen: View {
                     .padding(.horizontal, 4)
                 }
 
-                // MARK: - Our Team Section
+                // MARK: - Our Team Section (Neo-Brutalist Box Parity with Android)
                 VStack(alignment: .leading, spacing: 16) {
                     Text("OUR TEAM")
-                        .font(.system(size: 18, weight: .black, design: .monospaced))
+                        .font(.system(size: 18, design: .monospaced))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 4)
 
                     NeoCard(backgroundColor: .neoGreen) {
                         VStack(alignment: .center, spacing: 4) {
                             Text("Middletown Aviation Foundation")
-                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                                .font(.system(size: 14, design: .monospaced))
                                 .foregroundStyle(.black)
                                 .lineLimit(1)
                             Text("Your Hops in the Hangar Crew")
-                                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                .font(.system(size: 12, design: .monospaced))
                                 .foregroundStyle(.black.opacity(0.8))
 
                             Spacer().frame(height: 16)
@@ -833,31 +790,24 @@ struct HomeScreen: View {
 
                             let columns = [GridItem(.adaptive(minimum: 100, maximum: 140), spacing: 8)]
                             LazyVGrid(columns: columns, spacing: 8) {
-                                ForEach(crew, id: \.self) { fullName in
-                                    let parts = fullName.split(separator: " ")
-                                    let firstName = parts.first.map(String.init) ?? ""
-                                    let lastName = parts.dropFirst().joined(separator: " ")
-
+                                ForEach(crew, id: \.self) { name in
                                     ZStack {
+                                        // Hard drop-shadow box matching Android version
                                         RoundedRectangle(cornerRadius: 8)
                                             .fill(Color.black)
-                                            .offset(x: 2, y: 2)
+                                            .offset(x: 3, y: 3)
 
-                                        VStack(spacing: 2) {
-                                            Text(firstName)
-                                                .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                                .foregroundStyle(.black)
-                                            if !lastName.isEmpty {
-                                                Text(lastName)
-                                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                                    .foregroundStyle(.black)
-                                            }
-                                        }
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 8)
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color.white)
-                                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                                        // Surface box card
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.white)
+                                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+
+                                        Text(name)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 6)
+                                            .font(.system(size: 12, design: .monospaced))
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.black)
                                     }
                                 }
                             }
@@ -866,11 +816,10 @@ struct HomeScreen: View {
                 }
                 .padding(.horizontal, 4)
 
-                // App Version Footer with extra bottom padding for smooth scrolling
                 if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
                     VStack(spacing: 4) {
                         Text("v\(version)")
-                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .font(.system(size: 12, design: .monospaced))
                             .foregroundStyle(.gray)
                     }
                     .padding(.top, 10)
@@ -912,9 +861,7 @@ struct SponsorsScreen: View {
                         NeoTextField(placeholder: "SEARCH SPONSORS...", text: $query)
                             .frame(maxWidth: .infinity)
 
-                        NeoButton(backgroundColor: .neoYellow, onClick: {
-                            isFilterPresented = true
-                        }) {
+                        NeoButton(backgroundColor: .neoYellow, onClick: { isFilterPresented = true }) {
                             Image(systemName: "line.3.horizontal.decrease.circle.fill")
                                 .font(.title3)
                                 .foregroundStyle(.black)
@@ -923,55 +870,30 @@ struct SponsorsScreen: View {
                     }
                     .padding(.bottom, 4)
 
-                    ForEach(filtered) { sponsor in
-                        NeoCard(backgroundColor: .neoWhite, onClick: {
+                    let pinnedNames = Set(["City of Middletown", "MWO", "Start Skydiving", "Team Fastrax"])
+                    let pinnedSponsors = filtered.filter { pinnedNames.contains($0.name) }
+                    let otherSponsors = filtered.filter { !pinnedNames.contains($0.name) }
+
+                    if !pinnedSponsors.isEmpty {
+                        Text("PREMIER SPONSORS")
+                            .font(.system(size: 12, design: .monospaced))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 4)
+
+                        ForEach(pinnedSponsors) { sponsor in
+                            SponsorCard(sponsor: sponsor, isPinned: true) {
+                                Analytics.logEvent("sponsor_open", parameters: ["sponsor_name": sponsor.name])
+                                selectedSponsor = sponsor
+                            }
+                        }
+
+                        Divider().background(Color.black).frame(height: 3).padding(.vertical, 8)
+                    }
+
+                    ForEach(otherSponsors) { sponsor in
+                        SponsorCard(sponsor: sponsor, isPinned: false) {
                             Analytics.logEvent("sponsor_open", parameters: ["sponsor_name": sponsor.name])
                             selectedSponsor = sponsor
-                        }) {
-                            HStack(alignment: .center, spacing: 14) {
-                                let names = (sponsor.name.contains("Kara Goheen") || sponsor.name.contains("Affordable Dentures")) ? [sponsor.name] : sponsor.name.split(separator: "&").map { String($0).trimmingCharacters(in: .whitespaces) }
-                                let boxBg = Color(hex: sponsor.background)
-
-                                HStack(spacing: 4) {
-                                    ForEach(Array(names.enumerated()), id: \.offset) { _, name in
-                                        let resName = getResourceName(name)
-                                        if let uiImage = UIImage(named: resName) {
-                                            Image(uiImage: uiImage)
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 52, height: 52)
-                                                .background(boxBg)
-                                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
-                                        } else {
-                                            Image(systemName: "star.fill")
-                                                .font(.system(size: 20))
-                                                .frame(width: 52, height: 52)
-                                                .background(boxBg == .white ? Color.neoYellow : boxBg)
-                                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
-                                        }
-                                    }
-                                }
-
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(sponsor.level.uppercased())
-                                        .font(.system(size: 10, weight: .black, design: .monospaced))
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Color.neoYellow)
-                                        .border(Color.black, width: 1.5)
-
-                                    Text(sponsor.name)
-                                        .font(.system(size: 16, weight: .black, design: .monospaced))
-                                        .foregroundStyle(.black)
-
-                                    Text(sponsor.description)
-                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                        .foregroundStyle(.black.opacity(0.8))
-                                }
-                                Spacer()
-                            }
                         }
                     }
                 }
@@ -983,6 +905,61 @@ struct SponsorsScreen: View {
         }
         .sheet(isPresented: $isFilterPresented) {
             FilterSelectionSheet(title: "FILTER SPONSORS", options: allTiers, selectedOptions: $selectedTiers)
+        }
+    }
+}
+
+struct SponsorCard: View {
+    let sponsor: SponsorItem
+    let isPinned: Bool
+    let onClick: () -> Void
+
+    var body: some View {
+        NeoCard(backgroundColor: isPinned ? Color.neoYellow : Color.neoWhite, onClick: onClick) {
+            HStack(alignment: .center, spacing: 14) {
+                let names = (sponsor.name.contains("Kara Goheen") || sponsor.name.contains("Affordable Dentures")) ? [sponsor.name] : sponsor.name.split(separator: "&").map { String($0).trimmingCharacters(in: .whitespaces) }
+                let boxBg = Color(hex: sponsor.background)
+
+                HStack(spacing: 4) {
+                    ForEach(Array(names.enumerated()), id: \.offset) { _, name in
+                        let resName = getResourceName(name)
+                        if let uiImage = UIImage(named: resName) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 52, height: 52)
+                                .background(boxBg)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                        } else {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 20))
+                                .frame(width: 52, height: 52)
+                                .background(boxBg == .white ? Color.neoYellow : boxBg)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                        }
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(sponsor.level.uppercased())
+                        .font(.system(size: 10, design: .monospaced))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.neoYellow)
+                        .border(Color.black, width: 1.5)
+
+                    Text(sponsor.name)
+                        .font(.system(size: 16, design: .monospaced))
+                        .foregroundStyle(.black)
+
+                    Text(sponsor.description)
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(.black.opacity(0.8))
+                }
+                Spacer()
+            }
         }
     }
 }
@@ -1026,30 +1003,30 @@ struct SponsorDetailSheet: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(sponsor.level.uppercased())
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .font(.system(size: 11, design: .monospaced))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.neoYellow)
                             .border(Color.black, width: 1.5)
 
                         Text(sponsor.name)
-                            .font(.system(size: 18, weight: .black, design: .monospaced))
+                            .font(.system(size: 18, design: .monospaced))
                             .foregroundStyle(.black)
                     }
                 }
 
                 NeoCard(backgroundColor: .neoWhite) {
                     Text("ABOUT")
-                        .font(.system(size: 14, weight: .black, design: .monospaced))
+                        .font(.system(size: 14, design: .monospaced))
                     Text(sponsor.about ?? sponsor.description)
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .font(.system(size: 13, design: .monospaced))
                         .foregroundStyle(.black.opacity(0.9))
                 }
 
                 if sponsor.email != nil || sponsor.phone != nil || sponsor.website != nil || !(sponsor.links?.isEmpty ?? true) {
                     NeoCard(backgroundColor: .neoWhite) {
                         Text("CONTACT INFORMATION")
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                            .font(.system(size: 14, design: .monospaced))
 
                         if let email = sponsor.email {
                             DetailContactRow(icon: "envelope.fill", value: email) {
@@ -1078,11 +1055,9 @@ struct SponsorDetailSheet: View {
                     }
                 }
 
-                NeoButton(backgroundColor: .neoYellow, onClick: {
-                    dismiss()
-                }) {
+                NeoButton(backgroundColor: .neoYellow, onClick: { dismiss() }) {
                     Text("CLOSE")
-                        .font(.system(size: 15, weight: .black, design: .monospaced))
+                        .font(.system(size: 15, design: .monospaced))
                         .frame(maxWidth: .infinity)
                         .foregroundColor(.black)
                 }
@@ -1118,9 +1093,7 @@ struct VendorsScreen: View {
                         NeoTextField(placeholder: "SEARCH VENDORS...", text: $query)
                             .frame(maxWidth: .infinity)
 
-                        NeoButton(backgroundColor: .neoYellow, onClick: {
-                            isFilterPresented = true
-                        }) {
+                        NeoButton(backgroundColor: .neoYellow, onClick: { isFilterPresented = true }) {
                             Image(systemName: "line.3.horizontal.decrease.circle.fill")
                                 .font(.title3)
                                 .foregroundStyle(.black)
@@ -1130,9 +1103,7 @@ struct VendorsScreen: View {
                     .padding(.bottom, 4)
 
                     ForEach(filtered) { vendor in
-                        NeoCard(backgroundColor: .neoWhite, onClick: {
-                            selectedVendor = vendor
-                        }) {
+                        NeoCard(backgroundColor: .neoWhite, onClick: { selectedVendor = vendor }) {
                             HStack(alignment: .center, spacing: 14) {
                                 let resName = getResourceName(vendor.name)
                                 let boxBg = Color(hex: vendor.background)
@@ -1156,18 +1127,18 @@ struct VendorsScreen: View {
 
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(vendor.category.uppercased())
-                                        .font(.system(size: 10, weight: .black, design: .monospaced))
+                                        .font(.system(size: 10, design: .monospaced))
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
                                         .background(Color.neoPink)
                                         .border(Color.black, width: 1.5)
 
                                     Text(vendor.name)
-                                        .font(.system(size: 16, weight: .black, design: .monospaced))
+                                        .font(.system(size: 16, design: .monospaced))
                                         .foregroundStyle(.black)
 
                                     Text(vendor.description)
-                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                        .font(.system(size: 12, design: .monospaced))
                                         .foregroundStyle(.black.opacity(0.8))
                                 }
                                 Spacer()
@@ -1218,30 +1189,30 @@ struct VendorDetailSheet: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(vendor.category.uppercased())
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .font(.system(size: 11, design: .monospaced))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.neoPink)
                             .border(Color.black, width: 1.5)
 
                         Text(vendor.name)
-                            .font(.system(size: 18, weight: .black, design: .monospaced))
+                            .font(.system(size: 18, design: .monospaced))
                             .foregroundStyle(.black)
                     }
                 }
 
                 NeoCard(backgroundColor: .neoWhite) {
                     Text("ABOUT")
-                        .font(.system(size: 14, weight: .black, design: .monospaced))
+                        .font(.system(size: 14, design: .monospaced))
                     Text(vendor.about ?? vendor.description)
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .font(.system(size: 13, design: .monospaced))
                         .foregroundStyle(.black.opacity(0.9))
                 }
 
                 if vendor.email != nil || vendor.phone != nil || vendor.website != nil {
                     NeoCard(backgroundColor: .neoWhite) {
                         Text("CONTACT INFORMATION")
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                            .font(.system(size: 14, design: .monospaced))
 
                         if let email = vendor.email {
                             DetailContactRow(icon: "envelope.fill", value: email) {
@@ -1264,11 +1235,9 @@ struct VendorDetailSheet: View {
                     }
                 }
 
-                NeoButton(backgroundColor: .neoYellow, onClick: {
-                    dismiss()
-                }) {
+                NeoButton(backgroundColor: .neoYellow, onClick: { dismiss() }) {
                     Text("CLOSE")
-                        .font(.system(size: 15, weight: .black, design: .monospaced))
+                        .font(.system(size: 15, design: .monospaced))
                         .frame(maxWidth: .infinity)
                         .foregroundColor(.black)
                 }
@@ -1290,41 +1259,34 @@ struct EntertainmentView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     Text("GROUND ENTERTAINMENT")
-                        .font(.system(size: 16, weight: .black, design: .monospaced))
+                        .font(.system(size: 16, design: .monospaced))
                         .foregroundStyle(.black)
 
                     if let ground = eventData?.groundEntertainment {
                         ForEach(ground) { item in
-                            EntertainmentCard(item: item) {
-                                selectedPerformer = item
-                            }
+                            EntertainmentCard(item: item) { selectedPerformer = item }
                         }
                     }
 
                     Text("AIRSHOW PILOTS / PERFORMERS")
-                        .font(.system(size: 16, weight: .black, design: .monospaced))
+                        .font(.system(size: 16, design: .monospaced))
                         .foregroundStyle(.black)
                         .padding(.top, 8)
 
                     if let performers = eventData?.performers {
                         ForEach(performers) { item in
-                            EntertainmentCard(item: item) {
-                                selectedPerformer = item
-                            }
+                            EntertainmentCard(item: item) { selectedPerformer = item }
                         }
                     }
 
                     Text("EVENT SCHEDULE")
-                        .font(.system(size: 16, weight: .black, design: .monospaced))
+                        .font(.system(size: 16, design: .monospaced))
                         .foregroundStyle(.black)
                         .padding(.top, 8)
 
                     if let schedule = eventData?.schedule {
-                        // Neo-Brutalist Event Schedule matching Android version
                         ZStack {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.black)
-                                .offset(x: 6, y: 6)
+                            RoundedRectangle(cornerRadius: 8).fill(Color.black).offset(x: 6, y: 6)
 
                             VStack(spacing: 0) {
                                 ForEach(Array(schedule.enumerated()), id: \.offset) { index, item in
@@ -1335,16 +1297,16 @@ struct EntertainmentView: View {
                                                 .frame(width: 40, height: 40)
                                                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
                                             Image(systemName: "calendar")
-                                                .font(.system(size: 18, weight: .bold))
+                                                .font(.system(size: 18))
                                                 .foregroundColor(.black)
                                         }
 
                                         VStack(alignment: .leading, spacing: 4) {
                                             Text(item.event)
-                                                .font(.system(size: 15, weight: .black, design: .monospaced))
+                                                .font(.system(size: 15, design: .monospaced))
                                                 .foregroundStyle(.black)
                                             Text(item.time)
-                                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                                .font(.system(size: 13, design: .monospaced))
                                                 .foregroundStyle(.black.opacity(0.8))
                                         }
                                         Spacer()
@@ -1352,10 +1314,7 @@ struct EntertainmentView: View {
                                     .padding(16)
 
                                     if index < schedule.count - 1 {
-                                        Rectangle()
-                                            .fill(Color.black)
-                                            .frame(height: 2)
-                                            .padding(.horizontal, 16)
+                                        Rectangle().fill(Color.black).frame(height: 2).padding(.horizontal, 16)
                                     }
                                 }
                             }
@@ -1407,29 +1366,25 @@ struct EntertainmentCard: View {
                         .frame(width: 42, height: 42)
                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
                     Image(systemName: iconName)
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.system(size: 18))
                         .foregroundColor(.black)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(category.uppercased())
-                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                        .font(.system(size: 9, design: .monospaced))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(Color.neoPink)
                         .border(Color.black, width: 1.5)
 
                     Text(item.name)
-                        .font(.system(size: 16, weight: .black, design: .monospaced))
+                        .font(.system(size: 16, design: .monospaced))
                         .foregroundStyle(.black)
-
-                    Text(item.role)
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.7))
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 14))
                     .foregroundStyle(.black)
             }
         }
@@ -1467,29 +1422,29 @@ struct PerformerDetailSheet: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(category.uppercased())
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .font(.system(size: 11, design: .monospaced))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.neoPink)
                             .border(Color.black, width: 1.5)
 
                         Text(performer.name)
-                            .font(.system(size: 20, weight: .black, design: .monospaced))
+                            .font(.system(size: 20, design: .monospaced))
                             .foregroundStyle(.black)
                     }
                 }
 
                 NeoCard(backgroundColor: .neoWhite) {
                     Text("ROLE & DETAILS")
-                        .font(.system(size: 14, weight: .black, design: .monospaced))
+                        .font(.system(size: 14, design: .monospaced))
                     Text(performer.role)
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .font(.system(size: 14, design: .monospaced))
                         .foregroundStyle(.black.opacity(0.9))
 
                     if let about = performer.about ?? performer.description, !about.isEmpty {
                         Spacer().frame(height: 4)
                         Text(about)
-                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                            .font(.system(size: 13, design: .monospaced))
                             .foregroundStyle(.black.opacity(0.8))
                     }
                 }
@@ -1497,7 +1452,7 @@ struct PerformerDetailSheet: View {
                 if !performer.socialUrl.isNilOrBlank || !performer.contactInfo.isNilOrBlank {
                     NeoCard(backgroundColor: .neoWhite) {
                         Text("CONNECT & CONTACT")
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                            .font(.system(size: 14, design: .monospaced))
 
                         if let urlStr = performer.socialUrl, let url = URL(string: urlStr) {
                             DetailContactRow(icon: "globe", value: performer.socialHandle ?? urlStr) {
@@ -1521,11 +1476,9 @@ struct PerformerDetailSheet: View {
                     }
                 }
 
-                NeoButton(backgroundColor: .neoYellow, onClick: {
-                    dismiss()
-                }) {
+                NeoButton(backgroundColor: .neoYellow, onClick: { dismiss() }) {
                     Text("CLOSE")
-                        .font(.system(size: 15, weight: .black, design: .monospaced))
+                        .font(.system(size: 15, design: .monospaced))
                         .frame(maxWidth: .infinity)
                         .foregroundColor(.black)
                 }
