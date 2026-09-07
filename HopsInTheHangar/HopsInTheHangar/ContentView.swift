@@ -480,7 +480,7 @@ struct BottomNavItem: View {
                     .frame(height: 22)
                 
                 Text(title)
-                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                    .font(.system(size: 15, weight: .black, design: .monospaced))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
             }
@@ -763,7 +763,7 @@ struct HomeScreen: View {
                     .padding(.horizontal, 4)
                 }
 
-                // MARK: - Our Team Section (Neo-Brutalist Box Cards Parity)
+                // MARK: - Our Team Section
                 VStack(alignment: .leading, spacing: 16) {
                     Text("OUR TEAM")
                         .font(.system(size: 18, design: .monospaced))
@@ -790,24 +790,36 @@ struct HomeScreen: View {
 
                             let columns = [GridItem(.adaptive(minimum: 100, maximum: 140), spacing: 8)]
                             LazyVGrid(columns: columns, spacing: 8) {
-                                ForEach(crew, id: \.self) { name in
+                                ForEach(crew, id: \.self) { fullName in
+                                    let parts = fullName.split(separator: " ")
+                                    let firstName = parts.first.map(String.init) ?? ""
+                                    let lastName = parts.dropFirst().joined(separator: " ")
+
                                     ZStack {
-                                        // Hard drop-shadow box matching Android version
                                         RoundedRectangle(cornerRadius: 8)
                                             .fill(Color.black)
                                             .offset(x: 3, y: 3)
 
-                                        // Card Box with thick border
                                         RoundedRectangle(cornerRadius: 8)
                                             .fill(Color.white)
                                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
 
-                                        Text(name)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 6)
-                                            .font(.system(size: 12, design: .monospaced))
-                                            .fontWeight(.bold)
-                                            .foregroundColor(.black)
+                                        VStack(spacing: 2) {
+                                            Text(firstName)
+                                                .font(.system(size: 12, design: .monospaced))
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.black)
+                                            if !lastName.isEmpty {
+                                                Text(lastName)
+                                                    .font(.system(size: 12, design: .monospaced))
+                                                    .fontWeight(.bold)
+                                                    .foregroundColor(.black)
+                                            }
+                                        }
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 8)
+                                        .frame(maxWidth: .infinity)
                                     }
                                 }
                             }
@@ -1396,6 +1408,7 @@ struct PerformerDetailSheet: View {
 
     var body: some View {
         ScrollView {
+            // Updated alignment to left-aligned inside this detail sheet
             VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 16) {
                     ZStack {
@@ -1423,44 +1436,52 @@ struct PerformerDetailSheet: View {
                 }
 
                 NeoCard(backgroundColor: .neoWhite) {
-                    Text("ROLE & DETAILS")
-                        .font(.system(size: 14, design: .monospaced))
-                    Text(performer.role)
-                        .font(.system(size: 14, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.9))
+                    // Left-aligned content container
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("ROLE & DETAILS")
+                            .font(.system(size: 14, design: .monospaced))
+                        Text(performer.role)
+                            .font(.system(size: 14, design: .monospaced))
+                            .foregroundStyle(.black.opacity(0.9))
 
-                    if let about = performer.about ?? performer.description, !about.isEmpty {
-                        Spacer().frame(height: 4)
-                        Text(about)
-                            .font(.system(size: 13, design: .monospaced))
-                            .foregroundStyle(.black.opacity(0.8))
+                        if let about = performer.about ?? performer.description, !about.isEmpty {
+                            Spacer().frame(height: 4)
+                            Text(about)
+                                .font(.system(size: 13, design: .monospaced))
+                                .foregroundStyle(.black.opacity(0.8))
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 if !performer.socialUrl.isNilOrBlank || !performer.contactInfo.isNilOrBlank {
                     NeoCard(backgroundColor: .neoWhite) {
-                        Text("CONNECT & CONTACT")
-                            .font(.system(size: 14, design: .monospaced))
+                        // Left-aligned content container
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("CONNECT & CONTACT")
+                                .font(.system(size: 14, design: .monospaced))
 
-                        if let urlStr = performer.socialUrl, let url = URL(string: urlStr) {
-                            DetailContactRow(icon: "globe", value: performer.socialHandle ?? urlStr) {
-                                UIApplication.shared.open(url)
+                            if let urlStr = performer.socialUrl, let url = URL(string: urlStr) {
+                                DetailContactRow(icon: "globe", value: performer.socialHandle ?? urlStr) {
+                                    UIApplication.shared.open(url)
+                                }
                             }
-                        }
 
-                        if let contact = performer.contactInfo, !contact.isEmpty {
-                            let parts = contact.split(separator: "|").map { String($0).trimmingCharacters(in: .whitespaces) }
-                            ForEach(parts, id: \.self) { part in
-                                let icon = part.contains("@") ? "envelope.fill" : (part.contains("http") ? "globe" : "info.circle.fill")
-                                DetailContactRow(icon: icon, value: part) {
-                                    if part.contains("http"), let url = URL(string: part) {
-                                        UIApplication.shared.open(url)
-                                    } else if part.contains("@"), let url = URL(string: "mailto:\(part)") {
-                                        UIApplication.shared.open(url)
+                            if let contact = performer.contactInfo, !contact.isEmpty {
+                                let parts = contact.split(separator: "|").map { String($0).trimmingCharacters(in: .whitespaces) }
+                                ForEach(parts, id: \.self) { part in
+                                    let icon = part.contains("@") ? "envelope.fill" : (part.contains("http") ? "globe" : "info.circle.fill")
+                                    DetailContactRow(icon: icon, value: part) {
+                                        if part.contains("http"), let url = URL(string: part) {
+                                            UIApplication.shared.open(url)
+                                        } else if part.contains("@"), let url = URL(string: "mailto:\(part)") {
+                                            UIApplication.shared.open(url)
+                                        }
                                     }
                                 }
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
 
