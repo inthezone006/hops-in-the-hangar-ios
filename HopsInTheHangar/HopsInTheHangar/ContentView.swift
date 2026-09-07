@@ -7,7 +7,7 @@ import UIKit
 extension Color {
     static let neoYellow = Color(red: 1.0, green: 0.92, blue: 0.23) // #FFE93B
     static let neoPink = Color(red: 1.0, green: 0.44, blue: 0.70)    // #FF6FB3
-    static let neoGreen = Color(red: 0.38, green: 0.89, blue: 0.58)  // #62E495
+    static let neoGreen = Color(red: 0.49, green: 0.85, blue: 0.34) // #7ED957 (Android Parity)
     static let neoBlue = Color(red: 0.34, green: 0.73, blue: 1.0)    // #57BAFF
     static let neoWhite = Color(red: 1.0, green: 1.0, blue: 1.0)
     static let neoBackground = Color(red: 0.96, green: 0.96, blue: 0.96)
