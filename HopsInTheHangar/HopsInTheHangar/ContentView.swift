@@ -433,21 +433,23 @@ struct ContentView: View {
 
             // Bottom App Bar
             VStack(spacing: 0) {
-                Rectangle()
-                    .fill(Color.black)
-                    .frame(height: 3)
+                            Rectangle()
+                                .fill(Color.black)
+                                .frame(height: 3)
 
-                HStack(spacing: 12) {
-                    BottomNavItem(title: "HOME", icon: "house.fill", color: .neoYellow, index: 0, currentTab: $currentTab)
-                    BottomNavItem(title: "SPONSORS", icon: "star.fill", color: .neoPink, index: 1, currentTab: $currentTab)
-                    BottomNavItem(title: "EVENTS", icon: "list.bullet", color: .neoGreen, index: 2, currentTab: $currentTab)
-                    BottomNavItem(title: "VENDORS", icon: "cart.fill", color: .neoBlue, index: 3, currentTab: $currentTab)
-                }
-                .padding(.horizontal, 16)
-                .frame(height: 64)
-                .background(Color.white)
-            }
-            .fixedSize(horizontal: false, vertical: true)
+                            HStack(spacing: 12) {
+                                BottomNavItem(title: "HOME", icon: "house.fill", color: .neoYellow, index: 0, currentTab: $currentTab)
+                                BottomNavItem(title: "SPONSORS", icon: "star.fill", color: .neoPink, index: 1, currentTab: $currentTab)
+                                BottomNavItem(title: "EVENTS", icon: "list.bullet", color: .neoGreen, index: 2, currentTab: $currentTab)
+                                BottomNavItem(title: "VENDORS", icon: "cart.fill", color: .neoBlue, index: 3, currentTab: $currentTab)
+                            }
+                            .padding(.horizontal, 24) // Matched to Android's 24dp horizontal padding
+                            .padding(.top, 20)        // Pushes the buttons down a bit more
+                            .padding(.bottom, 2)
+                            .frame(height: 58)        // Shorter bottom nav bar height
+                            .background(Color.white)
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
         }
         .ignoresSafeArea(.keyboard)
         .background(Color.neoBackground)
@@ -479,7 +481,7 @@ struct BottomNavItem: View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.black)
-                .offset(x: isSelected ? 1 : 2, y: isSelected ? 1 : 2)
+                .offset(x: isSelected ? 1 : 3, y: isSelected ? 1 : 3)
 
             RoundedRectangle(cornerRadius: 8)
                 .fill(isSelected ? color : Color.neoWhite)
@@ -491,17 +493,19 @@ struct BottomNavItem: View {
 
             VStack(spacing: 2) {
                 Image(systemName: icon)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
+                    .frame(height: 22)
+                
                 Text(title)
-                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                    .font(.system(size: 21, weight: .black, design: .monospaced))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.5) // Allows text to scale down slightly if needed instead of wrapping
             }
             .foregroundColor(.black)
-            .padding(.horizontal, 4)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 2)
+            .padding(.vertical, 8)
         }
-        .frame(maxWidth: 82, maxHeight: 46)
+        .frame(maxWidth: .infinity, minHeight: 46, maxHeight: 46) // Explicitly constrains all buttons to the same max height
         .offset(x: isSelected ? 1 : 0, y: isSelected ? 1 : 0)
     }
 }
