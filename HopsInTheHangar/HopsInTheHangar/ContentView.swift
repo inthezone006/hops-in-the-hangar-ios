@@ -176,12 +176,10 @@ struct FilterSelectionSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Filter Title without icon and pink badge box
                 Text(title)
                     .font(.system(size: 18, weight: .black, design: .monospaced))
                     .foregroundStyle(.black)
 
-                // Outer card container removed so checklist options sit directly in the sheet
                 VStack(spacing: 12) {
                     ForEach(options, id: \.self) { option in
                         let isSelected = selectedOptions.contains(option)
@@ -387,7 +385,7 @@ struct ContentView: View {
 
                     HStack {
                         Spacer()
-                        TicketsButton() // Replaced standard button with custom animated TicketsButton
+                        TicketsButton()
                     }
                     .padding(.horizontal, 16)
                 }
@@ -495,7 +493,7 @@ struct BottomNavItem: View {
     }
 }
 
-// MARK: - Full Screen Image Viewer Sheet with Zoom, Pan, and Tap to Exit
+// MARK: - Full Screen Image Viewer Sheet with Custom Zoom & Pan Center Tracking
 struct FullScreenImageViewer: View {
     let imageName: String
     @Environment(\.dismiss) private var dismiss
@@ -510,51 +508,65 @@ struct FullScreenImageViewer: View {
             Color.black.ignoresSafeArea()
 
             if let uiImg = UIImage(named: imageName) {
-                Image(uiImage: uiImg)
-                    .resizable()
-                    .scaledToFit()
-                    .scaleEffect(scale)
-                    .offset(offset)
-                    .gesture(
-                        SimultaneousGesture(
-                            MagnificationGesture()
-                                .onChanged { value in
-                                    let delta = value / lastScale
-                                    lastScale = value
-                                    scale = min(max(scale * delta, 1.0), 5.0)
-                                }
-                                .onEnded { _ in
-                                    lastScale = 1.0
-                                    if scale <= 1.0 {
-                                        withAnimation {
-                                            scale = 1.0
-                                            offset = .zero
+                GeometryReader { geometry in
+                    Image(uiImage: uiImg)
+                        .resizable()
+                        .scaledToFit()
+                        .scaleEffect(scale, anchor: .center)
+                        .offset(offset)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .gesture(
+                            SimultaneousGesture(
+                                MagnificationGesture()
+                                    .onChanged { value in
+                                        let delta = value / lastScale
+                                        lastScale = value
+                                        let newScale = scale * delta
+                                        scale = min(max(newScale, 1.0), 5.0)
+                                    }
+                                    .onEnded { _ in
+                                        lastScale = 1.0
+                                        if scale <= 1.0 {
+                                            withAnimation(.spring()) {
+                                                scale = 1.0
+                                                offset = .zero
+                                            }
+                                        }
+                                    },
+                                DragGesture()
+                                    .onChanged { value in
+                                        if scale > 1.0 {
+                                            let currentX = lastOffset.width + value.translation.width
+                                            let currentY = lastOffset.height + value.translation.height
+                                            offset = CGSize(width: currentX, height: currentY)
                                         }
                                     }
-                                },
-                            DragGesture()
-                                .onChanged { value in
+                                    .onEnded { _ in
+                                        lastOffset = offset
+                                    }
+                            )
+                        )
+                        .simultaneousGesture(
+                            TapGesture(count: 2).onEnded {
+                                withAnimation(.spring()) {
                                     if scale > 1.0 {
-                                        offset = CGSize(
-                                            width: lastOffset.width + value.translation.width,
-                                            height: lastOffset.height + value.translation.height
-                                        )
+                                        scale = 1.0
+                                        offset = .zero
+                                        lastOffset = .zero
+                                    } else {
+                                        scale = 2.5
                                     }
                                 }
-                                .onEnded { _ in
-                                    lastOffset = offset
-                                }
+                            }
                         )
-                    )
-                    .simultaneousGesture(
-                        TapGesture(count: 1)
-                            .onEnded {
+                        .simultaneousGesture(
+                            TapGesture(count: 1).onEnded {
                                 if scale <= 1.0 {
                                     dismiss()
                                 }
                             }
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        )
+                }
             } else {
                 Text("Image not found")
                     .foregroundColor(.white)
