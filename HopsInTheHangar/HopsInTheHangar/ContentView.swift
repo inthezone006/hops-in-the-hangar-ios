@@ -763,7 +763,7 @@ struct HomeScreen: View {
                     .padding(.horizontal, 4)
                 }
 
-                // MARK: - Our Team Section (Neo-Brutalist Box Parity with Android)
+                // MARK: - Our Team Section (Neo-Brutalist Box Cards Parity)
                 VStack(alignment: .leading, spacing: 16) {
                     Text("OUR TEAM")
                         .font(.system(size: 18, design: .monospaced))
@@ -797,7 +797,7 @@ struct HomeScreen: View {
                                             .fill(Color.black)
                                             .offset(x: 3, y: 3)
 
-                                        // Surface box card
+                                        // Card Box with thick border
                                         RoundedRectangle(cornerRadius: 8)
                                             .fill(Color.white)
                                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
@@ -944,11 +944,8 @@ struct SponsorCard: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(sponsor.level.uppercased())
-                        .font(.system(size: 10, design: .monospaced))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.neoYellow)
-                        .border(Color.black, width: 1.5)
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.black.opacity(0.7))
 
                     Text(sponsor.name)
                         .font(.system(size: 16, design: .monospaced))
@@ -1003,11 +1000,8 @@ struct SponsorDetailSheet: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(sponsor.level.uppercased())
-                            .font(.system(size: 11, design: .monospaced))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.neoYellow)
-                            .border(Color.black, width: 1.5)
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.black.opacity(0.7))
 
                         Text(sponsor.name)
                             .font(.system(size: 18, design: .monospaced))
@@ -1127,11 +1121,8 @@ struct VendorsScreen: View {
 
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(vendor.category.uppercased())
-                                        .font(.system(size: 10, design: .monospaced))
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Color.neoPink)
-                                        .border(Color.black, width: 1.5)
+                                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                        .foregroundStyle(.black.opacity(0.7))
 
                                     Text(vendor.name)
                                         .font(.system(size: 16, design: .monospaced))
@@ -1189,11 +1180,8 @@ struct VendorDetailSheet: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(vendor.category.uppercased())
-                            .font(.system(size: 11, design: .monospaced))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.neoPink)
-                            .border(Color.black, width: 1.5)
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.black.opacity(0.7))
 
                         Text(vendor.name)
                             .font(.system(size: 18, design: .monospaced))
