@@ -327,6 +327,47 @@ enum DataLoader {
     }
 }
 
+// MARK: - Top Bar Tickets Button Component
+struct TicketsButton: View {
+    @State private var isPressed = false
+
+    var body: some View {
+        let shadowX: CGFloat = isPressed ? 1 : 3
+        let shadowY: CGFloat = isPressed ? 1 : 3
+        let transX: CGFloat = isPressed ? 2 : 0
+        let transY: CGFloat = isPressed ? 2 : 0
+
+        HStack(spacing: 4) {
+            Image(systemName: "ticket.fill")
+                .font(.system(size: 11, weight: .black))
+            Text("TICKETS")
+                .font(.system(size: 11, weight: .black, design: .monospaced))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.neoPink)
+        .foregroundColor(.black)
+        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 3))
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.black)
+                .offset(x: shadowX, y: shadowY)
+        )
+        .offset(x: transX, y: transY)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            Analytics.logEvent("get_tickets_tap", parameters: nil)
+            withAnimation(.easeInOut(duration: 0.1)) { isPressed = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.easeInOut(duration: 0.1)) { isPressed = false }
+                if let url = URL(string: "https://middletownaviationfoundation.ticketspice.com/hops-in-the-hangar-2026") {
+                    UIApplication.shared.open(url)
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Root Scaffold Shell
 struct ContentView: View {
     @State private var eventData: EventData? = DataLoader.loadEventData()
@@ -346,29 +387,7 @@ struct ContentView: View {
 
                     HStack {
                         Spacer()
-                        Button {
-                            Analytics.logEvent("get_tickets_tap", parameters: nil)
-                            if let url = URL(string: "https://middletownaviationfoundation.ticketspice.com/hops-in-the-hangar-2026") {
-                                UIApplication.shared.open(url)
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "ticket.fill")
-                                    .font(.system(size: 11, weight: .black))
-                                Text("TICKETS")
-                                    .font(.system(size: 11, weight: .black, design: .monospaced))
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color.neoPink)
-                            .foregroundColor(.black)
-                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 3))
-                            .background(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.black)
-                                    .offset(x: 3, y: 3)
-                            )
-                        }
+                        TicketsButton() // Replaced standard button with custom animated TicketsButton
                     }
                     .padding(.horizontal, 16)
                 }
