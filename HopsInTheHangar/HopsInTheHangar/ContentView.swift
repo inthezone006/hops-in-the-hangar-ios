@@ -1317,15 +1317,47 @@ struct EntertainmentView: View {
                         .padding(.top, 8)
 
                     if let schedule = eventData?.schedule {
-                        ForEach(schedule) { item in
-                            NeoCard(backgroundColor: .neoGreen) {
-                                Text(item.event)
-                                    .font(.system(size: 16, weight: .black, design: .monospaced))
-                                    .foregroundStyle(.black)
-                                Text(item.time)
-                                    .font(.system(size: 14, weight: .black, design: .monospaced))
-                                    .foregroundStyle(.black)
+                        // Neo-Brutalist Event Schedule matching Android version
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.black)
+                                .offset(x: 6, y: 6)
+
+                            VStack(spacing: 0) {
+                                ForEach(Array(schedule.enumerated()), id: \.offset) { index, item in
+                                    HStack(alignment: .center, spacing: 14) {
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(Color.neoPink)
+                                                .frame(width: 40, height: 40)
+                                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                                            Image(systemName: "calendar")
+                                                .font(.system(size: 18, weight: .bold))
+                                                .foregroundColor(.black)
+                                        }
+
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(item.event)
+                                                .font(.system(size: 15, weight: .black, design: .monospaced))
+                                                .foregroundStyle(.black)
+                                            Text(item.time)
+                                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                                .foregroundStyle(.black.opacity(0.8))
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding(16)
+
+                                    if index < schedule.count - 1 {
+                                        Rectangle()
+                                            .fill(Color.black)
+                                            .frame(height: 2)
+                                            .padding(.horizontal, 16)
+                                    }
+                                }
                             }
+                            .background(Color.white)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 3))
                         }
                     }
                 }
