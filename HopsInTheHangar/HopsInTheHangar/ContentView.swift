@@ -47,6 +47,43 @@ func getResourceName(_ name: String?) -> String {
         .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
 }
 
+// MARK: - Reusable Linkify Text Helper (Parses URLs & Emails)
+struct LinkifyText: View {
+    let text: String
+    var style: Font = .system(size: 13, design: .monospaced)
+    var color: Color = .black
+
+    var body: some View {
+        Text(parseMarkdownLinks(from: text))
+            .font(style)
+            .foregroundColor(color)
+    }
+
+    private func parseMarkdownLinks(from string: String) -> AttributedString {
+        var attributedString = AttributedString(string)
+        
+        // Simple regex pattern to detect URLs
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let matches = detector?.matches(in: string, options: [], range: NSRange(location: 0, length: string.utf16.count))
+        
+        matches?.reversed().forEach { match in
+            guard let range = Range(match.range, in: string),
+                  let url = match.url else { return }
+            
+            if let lowerBound = AttributedString.Index(range.lowerBound, within: attributedString),
+               let upperBound = AttributedString.Index(range.upperBound, within: attributedString) {
+                
+                let subStringRange = lowerBound..<upperBound
+                attributedString[subStringRange].link = url
+                attributedString[subStringRange].foregroundColor = .blue
+                attributedString[subStringRange].underlineStyle = .single
+                attributedString[subStringRange].font = .system(size: 13, weight: .bold, design: .monospaced)
+            }
+        }
+        return attributedString
+    }
+}
+
 // MARK: - Reusable Neo Brutalist Card Component
 struct NeoCard<Content: View>: View {
     var backgroundColor: Color = .white
@@ -799,10 +836,12 @@ struct HomeScreen: View {
 
                                 if isExpanded {
                                     VStack(alignment: .leading, spacing: 0) {
-                                        Text(faq.answer)
-                                            .font(.system(size: 13, design: .monospaced))
-                                            .foregroundStyle(.black.opacity(0.9))
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        LinkifyText(
+                                            text: faq.answer,
+                                            style: .system(size: 13, design: .monospaced),
+                                            color: .black.opacity(0.9)
+                                        )
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                     }
                                     .padding(16)
                                     .background(Color.white)
